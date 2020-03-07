@@ -13,8 +13,6 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
     _prevAngle = 0;
     _currentAngle = 0;
 
-    _speedTimer.begin(measureSpeedTimer, 50);
-
     _Kp = 4;
     _Kd = 0;
     _Ki = 1;
@@ -27,14 +25,24 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
     pinMode(_pin2, OUTPUT);
 }
 
+void FlywheelMotor::initMotor(){
+    _speedTimer.priority(255);
+    _speedTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
+}
+
 //Return current motor angle
 double FlywheelMotor::getAngle(){
     return _currentAngle;
 }
 
-//Return current motor speed
+//Return current motor speed in deg/sec
 double FlywheelMotor::getSpeed(){
     return _speed;
+}
+
+//Return current motor speed in rpm
+double FlywheelMotor::getSpeedRPM(){
+    return _speed/6;
 }
 
 //Return encoder value
@@ -43,11 +51,21 @@ double FlywheelMotor::readAngle(){
 }
 
 //Calculate motor speed
-void FlywheelMotor::measureSpeed(){
+void FlywheelMotor::measureSpeed(){    
     _prevAngle = _currentAngle;
     _currentAngle = readAngle();
 
-    _speed = (_currentAngle - _prevAngle)/SPEED_INTERVAL*USEC_TO_SEC;
+
+    _speed = ((_currentAngle - _prevAngle) * USEC_TO_SEC) / SPEED_INTERVAL;
+
+    if(DEBUG_MOTOR){
+        Serial.print("Delta angle: ");
+        Serial.print(_currentAngle - _prevAngle);
+        Serial.print("\t Speed (deg/sec): ");
+        Serial.print(_speed);
+        Serial.print("\t Speed (rpm): ");
+        Serial.println(_speed/6);
+    }
 }
 
 //Set speed of the motor, dir:CW or CCW
@@ -71,10 +89,10 @@ void FlywheelMotor::setMotorSpeedPID(double targetSpeed){
 
     if(dir == CW){
         analogWrite(_pin1, 0);
-        analogWrite(_pin2, _speedCommand);
+        analogWrite(_pin2, abs(_targetSpeed));
     }
     else{
-        analogWrite(_pin1, _speedCommand);
+        analogWrite(_pin1, abs(_targetSpeed));
         analogWrite(_pin2, 0);
     }
 }

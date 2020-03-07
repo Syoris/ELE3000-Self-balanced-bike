@@ -20,7 +20,7 @@ VectorFloat gravity;    // [x, y, z]            gravity vector
 
 volatile bool mpuInterrupt;     // indicates whether MPU interrupt pin has gone high
 bool waitForCmd = false;    // To wait for a character sent before starting
-bool printData = true;  // Print data to debug
+bool printData = false;  // Print data to debug
 
 
 // ================================================================
@@ -122,13 +122,17 @@ void IMU_Compute(float* ypr){
                 mpu.dmpGetGravity(&gravity, &q);
                 mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
+                ypr[0] = ypr[0]*TO_ANGLE;
+                ypr[1] = ypr[1]*TO_ANGLE;
+                ypr[2] = ypr[2]*TO_ANGLE;
+
                 if (printData){
                     Serial.print("ypr\t");
-                    Serial.print(ypr[0] * 180/M_PI);
+                    Serial.print(ypr[0]);
                     Serial.print("\t");
-                    Serial.print(ypr[1] * 180/M_PI);
+                    Serial.print(ypr[1]);
                     Serial.print("\t");
-                    Serial.println(ypr[2] * 180/M_PI);
+                    Serial.println(ypr[2]);
                 }
             }
         }

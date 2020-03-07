@@ -8,14 +8,18 @@
 #define CW true
 #define CCW false
 
+#define DEBUG_MOTOR 0
+
 #define ENC_PIN_1 12
 #define ENC_PIN_2 11
 
 #define MOTOR_PIN_1 1
 #define MOTOR_PIN_2 2
 
-#define COUNT_TO_ANGLE 360/(21.3*48)
-#define SPEED_INTERVAL 300000 //Interval to measure speed (in uS)
+#define COUNT_PER_TURN 44
+#define GEARBOX_RATIO 23.1
+#define COUNT_TO_ANGLE 360/(GEARBOX_RATIO*COUNT_PER_TURN)
+#define SPEED_INTERVAL 300000 //500ms Interval to measure speed (in uS)
 #define USEC_TO_SEC 1000000
 
 class FlywheelMotor{
@@ -40,10 +44,13 @@ class FlywheelMotor{
     public:
         FlywheelMotor();
 
+        void initMotor();
+
         double readAngle();
         void measureSpeed();
 
         double getSpeed();
+        double getSpeedRPM();
         double getAngle();
 
         void setMotorSpeed(int speed, bool dir);

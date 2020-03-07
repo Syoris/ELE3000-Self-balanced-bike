@@ -24,50 +24,82 @@ float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gra
 // ===                      INITIAL SETUP                       ===
 // ================================================================
 void setup() {
-    // Initialize serial communication
+    //! Initialize serial communication
     Serial.begin(9600);
-    while(!Serial.available());
-    // Attach servo
-    //servo.attach(7);
-    
-    // Setup IMU
-    //imuReady = IMU_Setup();
 
-    // configure LED for output
+    //! configure LED for output
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
+
+    while(!Serial.available()); //Wait for serial command
+
+    //! Attach servo
+    //servo.attach(7);
+    
+    //! Setup IMU
+    imuReady = IMU_Setup();
+
+    //! Initialize motor and timer
+    //flywheelMotor.initMotor();
 }
 
+double motorAngle = 0;
 double angle = 0;
-
+int max_speed = 255;
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 void loop() {
-    // // If IMU not ready failed, don't try to do anything
-    // if (!imuReady) return;
+    //! Test du IMU
+    // If IMU not ready failed, don't try to do anything
+    if (!imuReady) return;
 
-    // IMU_Compute(ypr);
+    IMU_Compute(ypr);
+    angle = ypr[1];
+    Serial.println(angle);
+    
+    int speed = (angle > 0 ? max_speed: -max_speed);
+    flywheelMotor.setMotorSpeedPID(speed);
 
-    // if(ypr[0] != -1 && ypr[1] != -1 && ypr[2] != -1){
-    //     servoAngle = ypr[2] * 180/M_PI+90;
-    //     servo.write(servoAngle);
-    // } 
 
+    //! Test de l'angle
     // angle = flywheelMotor.readAngle();
-    // Serial.println(angle);
-
-    // double error = 720 - angle;
-    // double Kp = 1.8;
-
+    // double error = 360 - angle;
+    // double Kp = 1.4;
     // if(error > 0 )
     //     flywheelMotor.setMotorSpeed(error*Kp, CW);
     // else
     //     flywheelMotor.setMotorSpeed(error*Kp, CCW);
 
-    flywheelMotor.setMotorSpeed(500, CW);
-    Serial.println(flywheelMotor.getSpeed());
+    // Serial.println(angle);
+
+
+    //! Test de la vitesse
+    // for(int i = -255; i<255; i+=5){
+    //     flywheelMotor.setMotorSpeedPID(i);
+
+
+    //     Serial.print("Voltage: ");
+    //     Serial.print(i);
+    //     Serial.print("\t Speed (deg/sec): ");
+    //     Serial.print(flywheelMotor.getSpeed());
+    //     Serial.print("\t Speed (rpm): ");
+    //     Serial.println(flywheelMotor.getSpeedRPM());
+    //     delay(300);
+    // }
+
+    //! Test Vitesse Variable
+    // for(int i = 0; i<400; i+=5){
+    //     analogWrite(2, i);
+    //     analogWrite(1, 0);
+
+
+    //     Serial.print("Voltage: ");
+    //     Serial.println(i);
+    //     delay(300);
+    // }
+
 
 }
 
