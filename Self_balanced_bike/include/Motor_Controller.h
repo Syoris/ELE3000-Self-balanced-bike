@@ -13,8 +13,8 @@
 #define ENC_PIN_1 12
 #define ENC_PIN_2 11
 
-#define MOTOR_PIN_1 1
-#define MOTOR_PIN_2 2
+#define MOTOR_PIN_1 4
+#define MOTOR_PIN_2 3
 
 #define COUNT_PER_TURN 44
 #define GEARBOX_RATIO 23.1
