@@ -19,13 +19,16 @@
 #define COUNT_PER_TURN 44
 #define GEARBOX_RATIO 23.1
 #define COUNT_TO_ANGLE 360/(GEARBOX_RATIO*COUNT_PER_TURN)
-#define SPEED_INTERVAL 300000 //500ms Interval to measure speed (in uS)
 #define USEC_TO_SEC 1000000
+
+#define SPEED_INTERVAL 300000 //300ms Interval to measure speed (in uS)
+#define COMPUTE_INTERVAL 500000 //Interval to compute PID for speed control (in uS)
 
 class FlywheelMotor{
     private:
         Encoder _motor_enc;
-        IntervalTimer _speedTimer;
+        IntervalTimer _speedMeasureTimer;
+        IntervalTimer _speedComputeTimer;
 
         double _speed;
         double _prevAngle;
@@ -44,7 +47,8 @@ class FlywheelMotor{
     public:
         FlywheelMotor();
 
-        void initMotor();
+        void startMotor();
+        void stopMotor();
 
         double readAngle();
         void measureSpeed();
@@ -54,7 +58,11 @@ class FlywheelMotor{
         double getAngle();
 
         void setMotorSpeed(int speed, bool dir);
-        void setMotorSpeedPID(double targetSpeed);
+        void setPID(double Kp, double Ki, double Kd);
+        
+        void setTargetSpeed(double targetSpeed);
+        void computeCommand();
+        
         void brakeMotor();
 };
 

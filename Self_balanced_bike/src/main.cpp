@@ -10,11 +10,6 @@
 #define LED_PIN 13
 
 
-bool blinkState = false;
-
-//Servo pin
-Servo servo;
-double servoAngle;
 
 bool imuReady = false;
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
@@ -27,66 +22,83 @@ void setup() {
     //! Initialize serial communication
     Serial.begin(9600);
 
-    //! configure LED for output
+    //! Configure LED for output
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
-
-    while(!Serial.available()); //Wait for serial command
-
-    //! Attach servo
-    //servo.attach(7);
     
     //! Setup IMU
     imuReady = IMU_Setup();
+    flywheelMotor.setTargetSpeed(150);
 
-    //! Initialize motor and timer
-    flywheelMotor.initMotor();
 }
 
 double motorAngle = 0;
 double angle = 0;
 int max_speed = 255;
+bool motorOn = false;
+String commande;
+
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 void loop() {
-    //! Test du IMU
-    // // If IMU not ready failed, don't try to do anything
-    // if (!imuReady) return;
 
-    // IMU_Compute(ypr);
-    // angle = ypr[1];
-    // Serial.println(angle);
-    
-    // int speed = (angle > 0 ? max_speed: -max_speed);
-    // flywheelMotor.setMotorSpeedPID(speed);
+    //! Read Serial Input
+	while (Serial.available()) {
+		char c = Serial.read();  //gets one byte from serial buffer
+		commande += c; //makes the string readString
+		delay(2);  //slow looping to allow buffer to fill with next character
+	}
+
+	if (commande.length() > 0) {
+		if (commande[0] == '#') {
+			commande = commande.substring(1);
+			int len = commande.length();
+			commande.remove(len-1, 1);
+
+			Serial.print("Commande: ");
+			Serial.println(commande);
+
+            if(commande == "On"){
+                motorOn = true;
+                flywheelMotor.startMotor();
+            }
+            else if(commande == "Off"){
+                motorOn = false;
+                flywheelMotor.stopMotor();
+            }
+
+            else if(commande.startsWith("setSpeed")){
+                float newSpeed = commande.substring(8).toFloat();              
+                Serial.print("New speed: ");
+                Serial.println(newSpeed);
+                flywheelMotor.setTargetSpeed(newSpeed);
+            }
+
+            else
+                Serial.println("Input invalid");
 
 
-    //! Test de l'angle
-    // angle = flywheelMotor.readAngle();
-    // double error = 360 - angle;
-    // double Kp = 1.4;
-    // if(error > 0 )
-    //     flywheelMotor.setMotorSpeed(error*Kp, CW);
-    // else
-    //     flywheelMotor.setMotorSpeed(error*Kp, CCW);
+        }
+        else
+            Serial.println("Input invalid");
 
-    // Serial.println(angle);
-
-
-    //! Test de la vitesse
-    for(int i = -256; i<256; i+=5){
-        flywheelMotor.setMotorSpeedPID(i);
-
-
-        Serial.print("Voltage: ");
-        Serial.print(i);
-        Serial.print("\t Speed (deg/sec): ");
-        Serial.print(flywheelMotor.getSpeed());
-        Serial.print("\t Speed (rpm): ");
-        Serial.println(flywheelMotor.getSpeedRPM());
-        delay(300);
+		commande = ""; //empty for next input
     }
+
+}
+
+void IMU_test(){
+    //! Test du IMU
+    // If IMU not ready failed, don't try to do anything
+    if (!imuReady) return;
+
+    IMU_Compute(ypr);
+    angle = ypr[1];
+    Serial.println(angle);
+    
+    int speed = (angle > 0 ? max_speed: -max_speed);
+    flywheelMotor.setTargetSpeed(speed);
 }
 
