@@ -21,8 +21,8 @@
 #define COUNT_TO_ANGLE 360/(GEARBOX_RATIO*COUNT_PER_TURN)
 #define USEC_TO_SEC 1000000
 
-#define SPEED_INTERVAL 300000 //300ms Interval to measure speed (in uS)
-#define COMPUTE_INTERVAL 500000 //Interval to compute PID for speed control (in uS)
+#define SPEED_INTERVAL 10000 //10ms Interval to measure speed (in uS)
+#define COMPUTE_INTERVAL 50000 //50ms Interval to compute PID for speed control (in uS)
 
 class FlywheelMotor{
     private:

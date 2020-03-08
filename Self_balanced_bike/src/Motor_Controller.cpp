@@ -1,8 +1,8 @@
 #include "Motor_Controller.h"
 
-double Kp = 50;
-double Kd = 0;
+double Kp = 0.5;
 double Ki = 0;
+double Kd = 0;
 
 static void measureSpeedTimer(){
     flywheelMotor.measureSpeed();
@@ -27,7 +27,7 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
     _Ki = Ki;
 
     _speedPID.SetMode(AUTOMATIC);
-    _speedPID.SetOutputLimits(-256, 256);
+    _speedPID.SetOutputLimits(0, 256);
     _speedPID.SetTunings(_Kp, _Ki, _Kd);
     _speedPID.SetSampleTime(COMPUTE_INTERVAL/1000);
 
@@ -48,7 +48,16 @@ void FlywheelMotor::startMotor(){
 void FlywheelMotor::stopMotor(){
     _speedMeasureTimer.end();
     _speedComputeTimer.end();
-    brakeMotor();
+
+    setMotorSpeed(0, CW);
+
+    Serial.print("#");
+    Serial.print(_speedPID.GetKp());
+    Serial.print(", ");
+    Serial.print(_speedPID.GetKi());
+    Serial.print(", ");
+    Serial.println(_speedPID.GetKd());
+    delay(150);
 }
 
 //Return encoder value
@@ -97,7 +106,9 @@ void FlywheelMotor::computeCommand(){
         Serial.print(", ");
         Serial.println(_speedCommand);
 
-        // Serial.print("Target speed: ");
+        // Serial.print("Time: ");
+        // Serial.print(millis());
+        // Serial.print("\tTarget speed: ");
         // Serial.print(_targetSpeed);
         // Serial.print("\tCurrent speed: ");
         // Serial.print(_speed);
@@ -107,10 +118,10 @@ void FlywheelMotor::computeCommand(){
         bool dir = _speedCommand < 0 ? CCW : CW;
         if(dir == CW){
             analogWrite(_pin1, 0);
-            analogWrite(_pin2, _speedCommand);
+            analogWrite(_pin2, abs(_speedCommand));
         }
         else{
-            analogWrite(_pin1, _speedCommand);
+            analogWrite(_pin1, abs(_speedCommand));
             analogWrite(_pin2, 0);
         }
     }

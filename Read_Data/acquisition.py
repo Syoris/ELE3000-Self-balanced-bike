@@ -2,6 +2,7 @@ import serial
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import time
 
 serPort = "COM22"
 
@@ -12,12 +13,21 @@ class SerialDataClass:
         self.file_path = os.path.join("Data", "Data_" + str(self.save_number))
         self.ser = ''
         self.data = {"Target speed": [], "Current speed": [], "Command": []}
-        self.data_interval = 0.2    # 200ms
+        self.data_interval = 0.1    # 200ms
+
+        self.targetSpeed = 1000
+        self.Kp = 0.5
+        self.Ki = 0
+        self.Kd = 0
 
         self.commands = {
             "getData" : self.readSerialData,
             "showData" : self.showData,
             "loadData" : self.loadData,
+            "setSpeed" : self.setTargetSpeed,
+            "setKp" : self.setKp,
+            "setKi" : self.setKi,
+            "setKd" : self.setKd,
             "help" : self.print_help,
             "exit" : self.stop
         }
@@ -32,15 +42,19 @@ class SerialDataClass:
         plt.plot(x, self.data["Current speed"], 'b', label="Current speed" )
         plt.plot(x, self.data["Command"], 'k', label="Command")
 
-        plt.title("Data " + self.save_number)
+        plt.title("Data " + str(self.save_number))
         plt.xlabel('Temps (sec)')
         plt.legend()
         plt.show()
 
     # Read Serial data
     def readSerialData(self):
+        self.data = {"Target speed": [], "Current speed": [], "Command": []}
         print("Reading data ...")
-        self.ser.write(1)
+        startCom = "#On "
+        endCom = "#Off "
+        self.ser.write(startCom.encode())
+
         self.ser.flushInput()
         self.ser.flushOutput()
         try:
@@ -60,6 +74,17 @@ class SerialDataClass:
 
         except KeyboardInterrupt:
             print("Interrupted")
+            self.ser.flushInput()
+            self.ser.write(endCom.encode())
+            self.ser.readline().decode('utf-8')
+            serialData = self.ser.readline().decode('utf-8')
+            ser_data = serialData.replace(' ', '')
+            ser_data = ser_data.split(',')
+            ser_data[0] = ser_data[0][1:-1]
+            ser_data[-1] = ser_data[-1].rstrip(', \n\r')
+            print("Kp:", ser_data[0], "\tKi:", ser_data[1], "\tKd:", ser_data[2] )
+
+            self.ser.flushInput()
             self.saveData()
 
     def saveData(self):
@@ -100,6 +125,11 @@ class SerialDataClass:
             except:
                 print("Connection failed")
                 raise
+        
+        self.setTargetSpeed(self.targetSpeed)
+        self.setKp(self.Kp)
+        self.setKi(self.Ki)
+        self.setKd(self.Kd)
     
     def stop(self):
         os._exit(0)
@@ -122,7 +152,45 @@ class SerialDataClass:
         else:
             print("No data found, creating new set")
 
+    def setTargetSpeed(self, speed):
+        self.targetSpeed = speed
+        commande = "#setSpeed " + str(speed) + " "
+        self.ser.write(commande.encode())
+        serialData1 = self.ser.readline().decode('utf-8')
+        serialData2 = self.ser.readline().decode('utf-8')
+        print(serialData2, end='')
     
+    def setKp(self, Kp):
+        self.ser.flushInput()
+        self.ser.flushOutput()
+        self.Kp = Kp
+        commande = "#setKp " + str(Kp) + " "
+        self.ser.write(commande.encode())
+        serialData1 = self.ser.readline().decode('utf-8')
+        serialData2 = self.ser.readline().decode('utf-8')
+        print(serialData2, end='')
+    
+    def setKi(self, Ki):
+        self.ser.flushInput()
+        self.ser.flushOutput()
+        self.Ki = Ki
+        commande = "#setKi " + str(Ki) + " "
+        self.ser.write(commande.encode())
+        serialData1 = self.ser.readline().decode('utf-8')
+        serialData2 = self.ser.readline().decode('utf-8')
+        print(serialData2, end='')
+
+    def setKd(self, Kd):
+        self.ser.flushInput()
+        self.ser.flushOutput()
+        self.Kd = Kd
+        commande = "#setKd " + str(Kd) + " "
+        self.ser.write(commande.encode())
+        serialData1 = self.ser.readline().decode('utf-8')
+        serialData2 = self.ser.readline().decode('utf-8')
+        print(serialData2, end='')
+
+
 def main():
     serData = SerialDataClass()
     if serData.to_connect:

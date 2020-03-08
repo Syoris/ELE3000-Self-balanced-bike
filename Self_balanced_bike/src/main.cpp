@@ -30,7 +30,7 @@ void setup() {
     
     //! Setup IMU
     imuReady = IMU_Setup();
-    flywheelMotor.setTargetSpeed(150);
+    flywheelMotor.setTargetSpeed(1000);
 
 }
 
@@ -84,6 +84,7 @@ void readSerial(){
                 motorOn = true;
                 flywheelMotor.startMotor();
             }
+
             else if(commande == "Off"){
                 motorOn = false;
                 flywheelMotor.stopMotor();
@@ -107,14 +108,14 @@ void readSerial(){
                 float newKi = commande.substring(6).toFloat();
                 Serial.print("New Ki: ");
                 Serial.println(newKi);
-                flywheelMotor.setKp(newKi);
+                flywheelMotor.setKi(newKi);
             }
 
             else if(commande.startsWith("setKd")){
                 float newKd = commande.substring(6).toFloat();
                 Serial.print("New Kd: ");
                 Serial.println(newKd);
-                flywheelMotor.setKp(newKd);
+                flywheelMotor.setKd(newKd);
             }
 
             else
