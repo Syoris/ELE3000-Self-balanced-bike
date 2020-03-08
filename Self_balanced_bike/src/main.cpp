@@ -9,6 +9,8 @@
 // Define
 #define LED_PIN 13
 
+void readSerial();
+void IMU_test();
 
 
 bool imuReady = false;
@@ -45,7 +47,25 @@ String commande;
 void loop() {
 
     //! Read Serial Input
-	while (Serial.available()) {
+	readSerial();
+
+}
+
+void IMU_test(){
+    //! Test du IMU
+    // If IMU not ready failed, don't try to do anything
+    if (!imuReady) return;
+
+    IMU_Compute(ypr);
+    angle = ypr[1];
+    Serial.println(angle);
+    
+    int speed = (angle > 0 ? max_speed: -max_speed);
+    flywheelMotor.setTargetSpeed(speed);
+}
+
+void readSerial(){
+    while (Serial.available()) {
 		char c = Serial.read();  //gets one byte from serial buffer
 		commande += c; //makes the string readString
 		delay(2);  //slow looping to allow buffer to fill with next character
@@ -76,6 +96,27 @@ void loop() {
                 flywheelMotor.setTargetSpeed(newSpeed);
             }
 
+            else if(commande.startsWith("setKp")){
+                float newKp = commande.substring(6).toFloat();
+                Serial.print("New Kp: ");
+                Serial.println(newKp);
+                flywheelMotor.setKp(newKp);
+            }
+
+            else if(commande.startsWith("setKi")){
+                float newKi = commande.substring(6).toFloat();
+                Serial.print("New Ki: ");
+                Serial.println(newKi);
+                flywheelMotor.setKp(newKi);
+            }
+
+            else if(commande.startsWith("setKd")){
+                float newKd = commande.substring(6).toFloat();
+                Serial.print("New Kd: ");
+                Serial.println(newKd);
+                flywheelMotor.setKp(newKd);
+            }
+
             else
                 Serial.println("Input invalid");
 
@@ -86,19 +127,4 @@ void loop() {
 
 		commande = ""; //empty for next input
     }
-
 }
-
-void IMU_test(){
-    //! Test du IMU
-    // If IMU not ready failed, don't try to do anything
-    if (!imuReady) return;
-
-    IMU_Compute(ypr);
-    angle = ypr[1];
-    Serial.println(angle);
-    
-    int speed = (angle > 0 ? max_speed: -max_speed);
-    flywheelMotor.setTargetSpeed(speed);
-}
-

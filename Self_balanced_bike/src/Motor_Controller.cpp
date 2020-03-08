@@ -48,22 +48,7 @@ void FlywheelMotor::startMotor(){
 void FlywheelMotor::stopMotor(){
     _speedMeasureTimer.end();
     _speedComputeTimer.end();
-}
-
-
-//Return current motor angle
-double FlywheelMotor::getAngle(){
-    return _currentAngle;
-}
-
-//Return current motor speed in deg/sec
-double FlywheelMotor::getSpeed(){
-    return _speed;
-}
-
-//Return current motor speed in rpm
-double FlywheelMotor::getSpeedRPM(){
-    return _speed/6;
+    brakeMotor();
 }
 
 //Return encoder value
@@ -101,10 +86,6 @@ void FlywheelMotor::setMotorSpeed(int speed, bool dir){
     }
 }
 
-void FlywheelMotor::setTargetSpeed(double targetSpeed){
-    _targetSpeed = targetSpeed;
-}
-
 //Set speed of the flywheel with PID, if targetSpeed < 0 => CCW
 void FlywheelMotor::computeCommand(){
 
@@ -135,12 +116,46 @@ void FlywheelMotor::computeCommand(){
     }
 }
 
-void FlywheelMotor::setPID(double Kp, double Ki, double Kd){
-    _speedPID.SetTunings(Kp, Kd, Ki);
-}
-
 //Brake motor
 void FlywheelMotor::brakeMotor(){
     digitalWrite(_pin1, HIGH);
     digitalWrite(_pin2, HIGH);
+}
+
+//! Interface
+//Return current motor angle
+double FlywheelMotor::getAngle(){return _currentAngle;}
+
+//Return current motor speed in deg/sec
+double FlywheelMotor::getSpeed(){ return _speed; }
+
+//Return current motor speed in rpm
+double FlywheelMotor::getSpeedRPM(){ return _speed/6; }
+
+void FlywheelMotor::setTargetSpeed(double targetSpeed){ _targetSpeed = targetSpeed;}
+
+void FlywheelMotor::setPID(){ 
+    _speedPID.SetTunings(_Kp, _Ki, _Kd);
+}
+
+void FlywheelMotor::setPID(double Kp, double Ki, double Kd){ 
+    _Kp = Kp;
+    _Ki = Ki;
+    _Kd = Kd;
+    _speedPID.SetTunings(_Kp, _Ki, _Kd);
+}
+
+void FlywheelMotor::setKp(double Kp){
+    _Kp = Kp;
+    setPID();
+}
+
+void FlywheelMotor::setKi(double Ki){
+    _Ki = Ki;
+    setPID();
+}
+
+void FlywheelMotor::setKd(double Kd){
+    _Kd = Kd;
+    setPID();
 }

@@ -53,17 +53,22 @@ class FlywheelMotor{
         double readAngle();
         void measureSpeed();
 
+        void computeCommand();
+        
+        void brakeMotor();
+
+        //! Interface
         double getSpeed();
         double getSpeedRPM();
         double getAngle();
 
-        void setMotorSpeed(int speed, bool dir);
-        void setPID(double Kp, double Ki, double Kd);
-        
         void setTargetSpeed(double targetSpeed);
-        void computeCommand();
-        
-        void brakeMotor();
+        void setMotorSpeed(int speed, bool dir);
+        void setKp(double Kp);
+        void setKi(double Ki);
+        void setKd(double Kd);
+        void setPID();
+        void setPID(double Kp, double Ki, double Kd);
 };
 
 extern FlywheelMotor flywheelMotor;
