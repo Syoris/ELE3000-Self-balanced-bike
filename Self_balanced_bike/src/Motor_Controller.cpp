@@ -40,9 +40,9 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
 }
 
 void FlywheelMotor::startMotor(){
-    Serial.println("Starting timers");
     _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
     _speedComputeTimer.begin(computeSpeedTimer, COMPUTE_INTERVAL);
+    _motor_enc.write(0);
 }
 
 void FlywheelMotor::stopMotor(){
@@ -50,6 +50,7 @@ void FlywheelMotor::stopMotor(){
     _speedComputeTimer.end();
 
     setMotorSpeed(0, CW);
+    delay(10);
 
     Serial.print("#");
     Serial.print(_speedPID.GetKp());
@@ -57,7 +58,6 @@ void FlywheelMotor::stopMotor(){
     Serial.print(_speedPID.GetKi());
     Serial.print(", ");
     Serial.println(_speedPID.GetKd());
-    delay(150);
 }
 
 //Return encoder value
@@ -99,21 +99,7 @@ void FlywheelMotor::setMotorSpeed(int speed, bool dir){
 void FlywheelMotor::computeCommand(){
 
     if(_speedPID.Compute()){
-        Serial.print("#");
-        Serial.print(_targetSpeed);
-        Serial.print(", ");
-        Serial.print(_speed);
-        Serial.print(", ");
-        Serial.println(_speedCommand);
-
-        // Serial.print("Time: ");
-        // Serial.print(millis());
-        // Serial.print("\tTarget speed: ");
-        // Serial.print(_targetSpeed);
-        // Serial.print("\tCurrent speed: ");
-        // Serial.print(_speed);
-        // Serial.print("\tCommand: ");
-        // Serial.println(_speedCommand);
+        printMotorData();
 
         bool dir = _speedCommand < 0 ? CCW : CW;
         if(dir == CW){
@@ -127,6 +113,27 @@ void FlywheelMotor::computeCommand(){
     }
 }
 
+void FlywheelMotor::stepReponse(double stepAmplitude){
+    double stepTime = 3000; //Time in ms
+    _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
+    _motor_enc.write(0);
+
+    unsigned int startingTime = millis();
+    unsigned int lastPrint = millis();
+    unsigned int currentTime = millis();
+
+    while(currentTime - startingTime < stepTime){
+        currentTime = millis();
+        setMotorSpeed(stepAmplitude*255/6, CW);
+        if(currentTime - lastPrint > COMPUTE_INTERVAL/1000){
+            printMotorData();
+            lastPrint = currentTime;
+        }
+    }
+    delay(50);
+    stopMotor();
+}
+
 //Brake motor
 void FlywheelMotor::brakeMotor(){
     digitalWrite(_pin1, HIGH);
@@ -134,6 +141,17 @@ void FlywheelMotor::brakeMotor(){
 }
 
 //! Interface
+void FlywheelMotor::printMotorData(){
+    Serial.print("#");
+    Serial.print(_targetSpeed);
+    Serial.print(", ");
+    Serial.print(_speed);
+    Serial.print(", ");
+    Serial.print(_speedCommand);
+    Serial.print(", ");
+    Serial.println(_currentAngle);
+}
+
 //Return current motor angle
 double FlywheelMotor::getAngle(){return _currentAngle;}
 

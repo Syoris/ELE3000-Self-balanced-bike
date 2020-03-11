@@ -118,6 +118,13 @@ void readSerial(){
                 flywheelMotor.setKd(newKd);
             }
 
+            else if(commande.startsWith("step")){
+                float stepVoltage = commande.substring(5).toFloat();
+                Serial.print("Step of ");
+                Serial.println(stepVoltage);
+                flywheelMotor.stepReponse(stepVoltage);
+            }
+            
             else
                 Serial.println("Input invalid");
 
