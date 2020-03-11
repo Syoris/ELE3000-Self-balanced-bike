@@ -62,6 +62,7 @@ class FlywheelMotor{
         void printMotorData();
 
         double getSpeed();
+        double getTargetSpeed();
         double getSpeedRPM();
         double getAngle();
 

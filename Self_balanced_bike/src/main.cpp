@@ -10,8 +10,10 @@
 #define LED_PIN 13
 
 void readSerial();
+void start();
+void stop();
 void IMU_test();
-
+void goToAccel();
 
 bool imuReady = false;
 float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
@@ -34,11 +36,18 @@ void setup() {
 
 }
 
-double motorAngle = 0;
+
+// Variables
 double angle = 0;
-int max_speed = 255;
-bool motorOn = false;
+double goalAccel = 0;
 String commande;
+
+int max_speed = 256;
+unsigned int prevTime = 0;
+
+bool motorOn = false;
+bool followAccel = false;
+bool toStabilise = false;
 
 
 // ================================================================
@@ -49,6 +58,22 @@ void loop() {
     //! Read Serial Input
 	readSerial();
 
+    
+
+
+    //! To go to a specific acceleration
+    if(followAccel)
+        goToAccel();
+
+}
+
+void goToAccel(){
+    static double speedInc = goalAccel/(COMPUTE_INTERVAL/USEC_TO_SEC);
+    unsigned int currentTime = millis();
+    if(currentTime-prevTime > COMPUTE_INTERVAL){
+        flywheelMotor.setTargetSpeed(flywheelMotor.getTargetSpeed() + speedInc);
+        prevTime = currentTime;
+    }
 }
 
 void IMU_test(){
@@ -62,6 +87,18 @@ void IMU_test(){
     
     int speed = (angle > 0 ? max_speed: -max_speed);
     flywheelMotor.setTargetSpeed(speed);
+}
+
+void start(){
+    motorOn = true;
+    flywheelMotor.startMotor();
+}
+
+void stop(){
+    motorOn = false;
+    followAccel = false;
+    toStabilise = false;
+    flywheelMotor.stopMotor();
 }
 
 void readSerial(){
@@ -80,14 +117,22 @@ void readSerial(){
 			Serial.print("Commande: ");
 			Serial.println(commande);
 
-            if(commande == "On"){
-                motorOn = true;
-                flywheelMotor.startMotor();
+            if(commande == "On"){ start();}
+
+            else if(commande == "Off"){stop();}
+
+            else if(commande == "stabilise"){
+                toStabilise = true;
+                start();
             }
 
-            else if(commande == "Off"){
-                motorOn = false;
-                flywheelMotor.stopMotor();
+            else if(commande == "accel"){
+                float accel = commande.substring(6).toFloat();
+                start();
+                Serial.print("Going to [deg/sec^2]: ");
+                Serial.println(accel);
+                goalAccel = accel;
+                followAccel = true;
             }
 
             else if(commande.startsWith("setSpeed")){

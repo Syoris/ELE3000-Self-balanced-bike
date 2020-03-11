@@ -156,10 +156,12 @@ void FlywheelMotor::printMotorData(){
 double FlywheelMotor::getAngle(){return _currentAngle;}
 
 //Return current motor speed in deg/sec
-double FlywheelMotor::getSpeed(){ return _speed; }
+double FlywheelMotor::getSpeed(){ return _speed;}
 
 //Return current motor speed in rpm
-double FlywheelMotor::getSpeedRPM(){ return _speed/6; }
+double FlywheelMotor::getSpeedRPM(){ return _speed/6;}
+
+double FlywheelMotor::getTargetSpeed(){ return _targetSpeed;}
 
 void FlywheelMotor::setTargetSpeed(double targetSpeed){ _targetSpeed = targetSpeed;}
 
