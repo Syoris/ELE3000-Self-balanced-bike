@@ -62,8 +62,6 @@ plot_func('Moteur en BF', 'Temps (s)', '', dataList, dataOpt);
 
 %% Contrôleur du vélo
 %% Designeur de Matlab
-clc 
-close all
 load Cv
 
 [num_v, den_v] = tfdata(Cv, 'v');
@@ -71,53 +69,6 @@ Kp_v = num_v(2);
 Kd_v = num_v(1);
 Ki_v = num_v(3);
 
-G_bf2 = (Jr*(Kp_v*s+Ki_v))/( -(Jv + Jr*(1-Kd_v)+A)*s^2 + Kp_v*Jr*s + (Ki_v*Jr+B) );
-
-fprintf("---- Gains du vélo ----\n");
-fprintf("\tKp: %4.2f\n", Kp_v)
-fprintf("\tKi: %4.2f\n", Ki_v)
-fprintf("\tKd: %4.2f\n", Kd_v)
-
 %% Pôles alignés
-clc
-close all
 A = Mv*Lv^2 + Mr*Lr^2;
-B = (Mv*Lv + Mr*Lr)*g;
-
-p = 10;
-p1 = s+p+p*1i;
-p2 = s+p-p*1i;
-poles = p1*p2;
-
-[num_v, den_v] = tfdata(poles, 'v');
-a_v = num_v(2);
-b_v = num_v(3);
-
-Kp_v = a_v/Jr;
-Ki_v = (b_v-B)/Jr;
-Kd_v = (1+A+Jv)/Jr - 1;
-
-fprintf("---- Gains du vélo ----\n");
-fprintf("\tKp: %4.2f\n", Kp_v)
-fprintf("\tKi: %4.2f\n", Ki_v)
-fprintf("\tKd: %4.2f\n", Kd_v)
-
-G2 = feedback(G, Kd_v*s);
-G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
-G_bf2 = (Jr*(Kp_v*s+Ki_v))/( -(Jv + Jr*(1-Kd_v)+A)*s^2 + Kp_v*Jr*s + (Ki_v*Jr+B) );
-
-% sim("Simulink/Moteur_BF")
-% dataList = {Phi_dot_des 'r' 'Commande [deg/sec]'; 
-%             Phi_dot 'b' 'Vitesse [deg/s]'};
-%             %Phi 'g' 'Position [deg]'};
-% dataOpt = {U 'k' 'Tension [V]'};
-% 
-% plot_func('Moteur en BF', 'Temps (s)', '', dataList, dataOpt);
-
-
-
-%%
-Kd = 0.5;
-G2 = -Jr*s/( (Jv+Jr*(1-Kd)+A)*s^2 - B );
-G3 = feedback(G, Kd*s);
-
+B = Mv*Lv 
