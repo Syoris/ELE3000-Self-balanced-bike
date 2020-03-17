@@ -27,7 +27,7 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
     _Ki = Ki_m;
 
     _speedPID.SetMode(AUTOMATIC);
-    _speedPID.SetOutputLimits(0, 256);
+    _speedPID.SetOutputLimits(-256, 256);
     _speedPID.SetTunings(_Kp, _Ki, _Kd);
     _speedPID.SetSampleTime(COMPUTE_INTERVAL/1000);
 
@@ -161,13 +161,20 @@ void FlywheelMotor::printMotorData(){
     else{
         Serial.print("Time:");
         Serial.print(millis());
-        Serial.print("\tGoal [deg/sec]: ");
+
+        Serial.print("\tBike Angle:");  //deg
+        Serial.print(*_bikeAngle);
+
+        Serial.print("\t\tGoal: ");       //deg/sec
         Serial.print(_targetSpeed);
-        Serial.print("\tSpeed [deg/sec]: ");
+
+        Serial.print("\tSpeed: ");      //deg/sec      
         Serial.print(_speed);
+
         Serial.print("\tPWM: ");
         Serial.print(_speedCommand);
-        Serial.print("\tAngle: ");
+
+        Serial.print("\tAngle: ");      //deg
         Serial.println(_currentAngle);
     }
     
@@ -192,6 +199,8 @@ double FlywheelMotor::getKd(){return _speedPID.GetKd();}
 
 
 void FlywheelMotor::setTargetSpeed(double targetSpeed){ _targetSpeed = targetSpeed;}
+
+void FlywheelMotor::setBikeAngle(double* bikeAngle){ _bikeAngle = bikeAngle;}
 
 void FlywheelMotor::setPID(){ 
     _speedPID.SetTunings(_Kp, _Ki, _Kd);

@@ -1,54 +1,59 @@
 #include "Main_Controller.h"
 
-double Ki_v = 0.7075;
-double Kp_v = 0.0672;
-double Kd_v = 0.0034;
+double Kp_v = 1000;
+double Ki_v = 0;
+double Kd_v = 0;
 
 MainController mainController;
 
-//TODO
-void computeAngleTimer(){
-
-}
-
-//TODO
-MainController::MainController():_anglePID(&_currentAngle, &_speedOutput, &_targetAngle, Kp_v, Ki_v, Kd_v, DIRECT),
-                                _computeTimer(){
+MainController::MainController():_anglePID(&_currentAngle, &_speedOutput, &_targetAngle, Kp_v, Ki_v, Kd_v, DIRECT){
     _targetAngle = 0;
     _Kp = Kp_v;
     _Ki = Ki_v;
     _Kd = Kd_v;
     
     _anglePID.SetMode(AUTOMATIC);
-    _anglePID.SetOutputLimits(0, 256);
+    _anglePID.SetOutputLimits(-2000, 2000);
     _anglePID.SetTunings(_Kp, _Ki, _Kd);
     _anglePID.SetSampleTime(COMPUTE_INTERVAL_ANGLE/1000);
 
-    _computeTimer.priority(255);
+    flywheelMotor.setBikeAngle(&_currentAngle);
 
+    _imuRdy = IMU_Setup();
 
-    //TODO Ajouter init du IMU
 }
 
-
 void MainController::startController(){
-    _computeTimer.begin(computeAngleTimer, COMPUTE_INTERVAL_ANGLE);
-
+    _toStabilize = true;
+    flywheelMotor.startMotor();
 }
 
 void MainController::stopController(){
-    _computeTimer.end();
+    _toStabilize = false;
 }
 
 
-//TODO
-void MainController::readAngle(){
+void MainController::updateAngle(){
+    if (!_imuRdy) return; //Check IMU is working
 
+    IMU_Compute(_ypr);
+    _currentAngle = _ypr[1];
 }
 
-//TODO
 void MainController::computeCommand(){
+    if(_toStabilize){
 
+        updateAngle();
+
+        if(_anglePID.Compute()){
+            flywheelMotor.setTargetSpeed(_speedOutput);
+
+            // Serial.print("Current Angle: ");
+            // Serial.print(_currentAngle);
+            // Serial.print("\t Flywheel speed: ");
+            // Serial.println(_speedOutput);
+        }
+    }
 }
 
 

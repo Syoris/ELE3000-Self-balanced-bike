@@ -10,15 +10,22 @@
 // Define
 #define LED_PIN 13
 
+// Prototypes
 void readSerial();
 void start();
 void stop();
 void IMU_test();
 void goToAccel();
 
-bool imuReady = false;
-float ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+// Variables
+double goalAccel;   //To test motor acceleration
+String commande;    //Command read through serial port
 
+unsigned int prevTime = 0;
+
+bool motorOn = false;
+bool followAccel = false;
+bool toStabilise = true;
 
 // ================================================================
 // ===                      INITIAL SETUP                       ===
@@ -30,43 +37,32 @@ void setup() {
     //! Configure LED for output
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
-    
-    //! Setup IMU
-    imuReady = IMU_Setup();
-    flywheelMotor.setTargetSpeed(1000);
 
+    while(!Serial.available());
+
+    //! Start stabilizer
+    mainController.startController();
 }
-
-
-// Variables
-double angle = 0;
-double goalAccel = 0;
-String commande;
-
-int max_speed = 256;
-unsigned int prevTime = 0;
-
-bool motorOn = false;
-bool followAccel = false;
-bool toStabilise = false;
 
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 void loop() {
-
     //! Read Serial Input
-	readSerial();
+	//readSerial();
 
     //! To go to a specific acceleration
     if(followAccel)
         goToAccel();
 
-    
+    //! To stabilize the bike
+    if(toStabilise)
+        mainController.computeCommand();
 
 }
 
+// Fonction de test
 void goToAccel(){
     static unsigned int computInt = COMPUTE_INTERVAL/1000;
     static double speedInc = goalAccel/1000*computInt;
@@ -76,19 +72,6 @@ void goToAccel(){
         flywheelMotor.setTargetSpeed(flywheelMotor.getTargetSpeed() + speedInc);
         prevTime = currentTime;
     }
-}
-
-void IMU_test(){
-    //! Test du IMU
-    // If IMU not ready failed, don't try to do anything
-    if (!imuReady) return;
-
-    IMU_Compute(ypr);
-    angle = ypr[1];
-    Serial.println(angle);
-    
-    int speed = (angle > 0 ? max_speed: -max_speed);
-    flywheelMotor.setTargetSpeed(speed);
 }
 
 void start(){

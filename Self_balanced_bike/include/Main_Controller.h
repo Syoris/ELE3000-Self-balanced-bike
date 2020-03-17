@@ -4,21 +4,23 @@
 #include <Arduino.h>
 #include <PID_v1.h>
 #include <IMU.h>
+#include <Motor_Controller.h>
 
-#define COMPUTE_INTERVAL_ANGLE 1000 //Interval to compute PID for speed control (in uS)
+#define COMPUTE_INTERVAL_ANGLE 10000 //Interval to compute PID for speed control (in uS)
 
 
 class MainController{
     private:
         PID _anglePID;
-        IntervalTimer _computeTimer;
 
         double _currentAngle;
         double _targetAngle;
         double _speedOutput;    //Target speed of flywheel
 
         double _Kp, _Ki, _Kd;
-        
+        float _ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+
+        bool _toStabilize = false;
         bool _imuRdy = false;
     
     public:
@@ -27,7 +29,7 @@ class MainController{
         void startController();
         void stopController();
 
-        void readAngle();
+        void updateAngle();
         void computeCommand();
 
 
@@ -46,5 +48,7 @@ class MainController{
         void setPID(double Kp, double Ki, double Kd);
 
 };
+
+extern MainController mainController;
 
 #endif

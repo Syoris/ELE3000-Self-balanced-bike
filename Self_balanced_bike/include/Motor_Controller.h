@@ -39,13 +39,14 @@ class FlywheelMotor{
         double _targetSpeed;
         double _speedCommand;
         double _Kp, _Kd, _Ki;
+        double* _bikeAngle;
 
         //Pinout
         int _pin1 = MOTOR_PIN_1;
         int _pin2 = MOTOR_PIN_2;
         
         //Pour options
-        bool _printTextData = false;
+        bool _printTextData = true;
 
     public:
         FlywheelMotor();
@@ -74,6 +75,7 @@ class FlywheelMotor{
 
         void setTargetSpeed(double targetSpeed);
         void setMotorSpeed(int speed, bool dir);
+        void setBikeAngle(double* bikeAngle);
         void setKp(double Kp);
         void setKi(double Ki);
         void setKd(double Kd);
