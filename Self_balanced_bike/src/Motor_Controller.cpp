@@ -1,8 +1,8 @@
 #include "Motor_Controller.h"
 
-double Kp = 0.5;
-double Ki = 0;
-double Kd = 0;
+double Kp_m = 0.0672;
+double Ki_m = 0.7075;
+double Kd_m = 0.0034;
 
 static void measureSpeedTimer(){
     flywheelMotor.measureSpeed();
@@ -18,13 +18,13 @@ FlywheelMotor flywheelMotor;
 FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2), 
                                 _speedMeasureTimer(),
                                 _speedComputeTimer(),
-                                _speedPID(&_speed, &_speedCommand, &_targetSpeed, Kp, Ki, Kd, DIRECT){
+                                _speedPID(&_speed, &_speedCommand, &_targetSpeed, Kp_m, Ki_m, Kd_m, DIRECT){
     _prevAngle = 0;
     _currentAngle = 0;
 
-    _Kp = Kp;
-    _Kd = Kd;
-    _Ki = Ki;
+    _Kp = Kp_m;
+    _Kd = Kd_m;
+    _Ki = Ki_m;
 
     _speedPID.SetMode(AUTOMATIC);
     _speedPID.SetOutputLimits(0, 256);
@@ -43,6 +43,8 @@ void FlywheelMotor::startMotor(){
     _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
     _speedComputeTimer.begin(computeSpeedTimer, COMPUTE_INTERVAL);
     _motor_enc.write(0);
+    _prevAngle = 0;
+    _currentAngle = 0;
 }
 
 void FlywheelMotor::stopMotor(){
@@ -50,9 +52,9 @@ void FlywheelMotor::stopMotor(){
     _speedComputeTimer.end();
 
     setMotorSpeed(0, CW);
-    delay(10);
+    delay(50);
 
-    Serial.print("#");
+    Serial.print("!");
     Serial.print(_speedPID.GetKp());
     Serial.print(", ");
     Serial.print(_speedPID.GetKi());
@@ -117,6 +119,8 @@ void FlywheelMotor::stepReponse(double stepAmplitude){
     double stepTime = 3000; //Time in ms
     _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
     _motor_enc.write(0);
+    _currentAngle = 0;
+    _prevAngle = 0;
 
     unsigned int startingTime = millis();
     unsigned int lastPrint = millis();
@@ -130,7 +134,7 @@ void FlywheelMotor::stepReponse(double stepAmplitude){
             lastPrint = currentTime;
         }
     }
-    delay(50);
+    Serial.println("*");
     stopMotor();
 }
 
@@ -142,14 +146,31 @@ void FlywheelMotor::brakeMotor(){
 
 //! Interface
 void FlywheelMotor::printMotorData(){
-    Serial.print("#");
-    Serial.print(_targetSpeed);
-    Serial.print(", ");
-    Serial.print(_speed);
-    Serial.print(", ");
-    Serial.print(_speedCommand);
-    Serial.print(", ");
-    Serial.println(_currentAngle);
+    if(!_printTextData){
+        Serial.print("#");
+        Serial.print(_targetSpeed);
+        Serial.print(", ");
+        Serial.print(_speed);
+        Serial.print(", ");
+        Serial.print(_speedCommand);
+        Serial.print(", ");
+        Serial.print(_currentAngle);
+        Serial.print(", ");
+        Serial.println(millis());
+    }
+    else{
+        Serial.print("Time:");
+        Serial.print(millis());
+        Serial.print("\tGoal [deg/sec]: ");
+        Serial.print(_targetSpeed);
+        Serial.print("\tSpeed [deg/sec]: ");
+        Serial.print(_speed);
+        Serial.print("\tPWM: ");
+        Serial.print(_speedCommand);
+        Serial.print("\tAngle: ");
+        Serial.println(_currentAngle);
+    }
+    
 }
 
 //Return current motor angle
@@ -162,6 +183,13 @@ double FlywheelMotor::getSpeed(){ return _speed;}
 double FlywheelMotor::getSpeedRPM(){ return _speed/6;}
 
 double FlywheelMotor::getTargetSpeed(){ return _targetSpeed;}
+
+double FlywheelMotor::getKp(){return _speedPID.GetKp();}
+
+double FlywheelMotor::getKi(){return _speedPID.GetKi();}
+
+double FlywheelMotor::getKd(){return _speedPID.GetKd();}
+
 
 void FlywheelMotor::setTargetSpeed(double targetSpeed){ _targetSpeed = targetSpeed;}
 

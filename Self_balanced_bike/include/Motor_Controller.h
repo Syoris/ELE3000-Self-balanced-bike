@@ -22,7 +22,7 @@
 #define USEC_TO_SEC 1000000
 
 #define SPEED_INTERVAL 5000 //Interval to measure speed (in uS)
-#define COMPUTE_INTERVAL 1000 //Interval to compute PID for speed control (in uS)
+#define COMPUTE_INTERVAL 5000 //Interval to compute PID for speed control (in uS)
 
 class FlywheelMotor{
     private:
@@ -44,6 +44,9 @@ class FlywheelMotor{
         int _pin1 = MOTOR_PIN_1;
         int _pin2 = MOTOR_PIN_2;
         
+        //Pour options
+        bool _printTextData = false;
+
     public:
         FlywheelMotor();
 
@@ -65,6 +68,9 @@ class FlywheelMotor{
         double getTargetSpeed();
         double getSpeedRPM();
         double getAngle();
+        double getKp();
+        double getKi();
+        double getKd();
 
         void setTargetSpeed(double targetSpeed);
         void setMotorSpeed(int speed, bool dir);

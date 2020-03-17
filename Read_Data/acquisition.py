@@ -10,32 +10,34 @@ serPort = "COM22"
 
 class SerialDataClass:
     def __init__(self):
-        self.to_connect = False
+        self.to_connect = True
         self.data_name = ""
         self.file_path = os.path.join("Data", self.data_name)
         self.ser = ''
 
-        self.Kp = 0.5
-        self.Ki = 0
-        self.Kd = 0
+        self.Kp = 0.0672
+        self.Ki = 0.71
+        self.Kd = 0.0034
 
         self.data = {   "Target speed": [], 
                         "Current speed": [], 
                         "Command": [], 
-                        "Angle": [], 
+                        "Angle": [],
+                        "Time": [],
                         "Kp":self.Kp,
                         "Ki":self.Ki,
-                        "Kd":self.Kd}
+                        "Kd":self.Kd,
+                        "Step amplitude": 0}
 
-        self.data_interval = 0.001    # 1ms
+        self.data_interval = 0.005    # 1ms
 
-        self.targetSpeed = 1000
+        self.targetSpeed = 1500
 
 
         self.commands = {
-            "getData" : self.readSerialData,
-            "showData" : self.showData,
-            "loadData" : self.loadData,
+            "run" : self.readSerialData,
+            "show" : self.showData,
+            "load" : self.loadData,
             "setSpeed" : self.setTargetSpeed,
             "setKp" : self.setKp,
             "setKi" : self.setKi,
@@ -48,8 +50,7 @@ class SerialDataClass:
 
     def showData(self):
         # To show the data
-        x = np.linspace(0, len(self.data["Target speed"]) - 1, num=len(self.data["Target speed"]))
-        x = x*self.data_interval
+        x = self.data["Time"]
 
         # Plot
         plt.plot(x, self.data["Target speed"], 'r', label="Target speed [deg/s]")
@@ -69,12 +70,24 @@ class SerialDataClass:
         self.data["Current speed"] = []
         self.data["Command"] = []
         self.data["Angle"] = []
-        
-        print("Reading data ...")
-        startCom = "#On "
-        endCom = "#Off "
-        self.ser.write(startCom.encode())
+        self.data["Time"] = []
 
+        input_type = input("Input type(step/ramp): ")
+        if input_type == "step":
+            goalSpeed = input("Target speed: ")
+            self.setTargetSpeed(goalSpeed)
+            startCom = "#On "
+        elif input_type == "ramp":
+            goalAccel = input("Target accel: ")
+            startCom = "#accel " + goalAccel + " "
+        else:
+            print("Invalid type")
+            startCom = " "
+        
+        endCom = "#Off "
+
+        print("Reading data ...")
+        self.ser.write(startCom.encode())
         self.ser.flushInput()
         self.ser.flushOutput()
         try:
@@ -82,7 +95,7 @@ class SerialDataClass:
             while True:
                 serialData = self.ser.readline().decode('utf-8')
                 if serialData.startswith('#'):
-                    print("Received data: ", serialData)
+                    # print("Received data: ", serialData)
                     ser_data = serialData.replace(' ', '')
                     ser_data = ser_data.split(',')
                     ser_data[0] = ser_data[0][1:-1]
@@ -92,22 +105,28 @@ class SerialDataClass:
                     self.data["Current speed"].append(float(ser_data[1]))    # Current Speed
                     self.data["Command"].append(float(ser_data[2])*6/256)  # Command
                     self.data["Angle"].append(float(ser_data[3]))  # Angle
-
+                    self.data["Time"].append(float(ser_data[4])) #Time
 
         except KeyboardInterrupt:
             print("Interrupted")
             self.ser.write(endCom.encode())
             self.ser.flushInput()
-            self.ser.readline().decode('utf-8')
-            self.ser.readline().decode('utf-8')
             serialData = self.ser.readline().decode('utf-8')
+            while(not (serialData.startswith('!'))):
+                serialData = self.ser.readline().decode('utf-8')
+
             ser_data = serialData.replace(' ', '')
             ser_data = ser_data.split(',')
-            ser_data[0] = ser_data[0][1:-1]
+            ser_data[0] = ser_data[0][1:]
             ser_data[-1] = ser_data[-1].rstrip(', \n\r')
             print("Kp:", ser_data[0], "\tKi:", ser_data[1], "\tKd:", ser_data[2] )
 
             self.ser.flushInput()
+
+            # Correct time
+            sub_val = self.data["Time"][0]
+            self.data["Time"] = [(x - sub_val)/1000 for x in self.data["Time"]]
+
             self.saveData()
 
     def saveData(self):
@@ -223,11 +242,14 @@ class SerialDataClass:
         print(serialData2, end='')
 
     def step(self, step_amplitude):
+        self.data["Step amplitude"] = step_amplitude
+
         self.data["Target speed"] = []
         self.data["Current speed"] = []
         self.data["Command"] = []
         self.data["Angle"] = []
-        
+        self.data["Time"] = []
+
         print("Reading data ...")
         startCom = "#step " + str(step_amplitude) + " "
         self.ser.write(startCom.encode())
@@ -236,12 +258,11 @@ class SerialDataClass:
 
         self.ser.flushInput()
         self.ser.flushOutput()
-        timeout = time.time() + 3
         #Format des données: #target_speed, current_speed, speedCommand
         while True:
             serialData = self.ser.readline().decode('utf-8')
-            if time.time() > timeout:
-                break
+            # if time.time() > timeout:
+            #     break
             if serialData.startswith('#'):
                 print("Received data: ", serialData)
                 ser_data = serialData.replace(' ', '')
@@ -253,23 +274,35 @@ class SerialDataClass:
                 self.data["Current speed"].append(float(ser_data[1]))    # Current Speed
                 self.data["Command"].append(float(ser_data[2])*6/256)  # Command
                 self.data["Angle"].append(float(ser_data[3]))  # Angle
+                self.data["Time"].append(float(ser_data[4]))  # Angle
 
-
+            elif serialData.startswith('*'):
+                break
         print("Timeout")
         self.ser.flushInput()
-        self.saveData()
+
+        sub_val = self.data["Time"][0]
+        self.data["Time"] = [(x - sub_val)/1000 for x in self.data["Time"]]
+
+        # Calculate motor parameters
+        ans = input("Motor parameters identification? (y/n) : ")
+        if ans is "y":
+            self.parameterIdentification()
+        else:
+            pass
     
-    def parameterIdentification(self, step_amplitude):
-        start_time = 0
-        n_data = 50
-        start_data = int(start_time/self.data_interval)
+        # Save data
+        self.saveData()
+
+    def parameterIdentification(self):
+        step_amplitude = self.data["Step amplitude"]
+        start_data = 50
 
         y = self.data["Angle"]
-        x = np.linspace(0, len(self.data["Target speed"]) - 1, num=len(self.data["Target speed"]))
-        x = x*self.data_interval
+        x = self.data["Time"]
 
-        y = y[start_data:start_data+n_data]
-        x = x[start_data:start_data+n_data]
+        y = y[start_data:-1]
+        x = x[start_data:-1]
 
         A = np.vstack([x, np.ones(len(x))]).T
         m, b = np.linalg.lstsq(A, y, rcond=None)[0]
@@ -280,17 +313,19 @@ class SerialDataClass:
         K = m/float(step_amplitude)
         tau = -b/m
         print("\nParamètres du moteur")
+        print("\tStep: ", step_amplitude)
         print("\tK: ", K)
         print("\tTau: ", tau)
 
-        plt.plot(x, y, 'k', label='Original data')
-        plt.plot(x, m*x + b, 'r', label='Fitted line')
-        plt.legend()
-        plt.show()
+        y_droite = [j*m+b for j in x]
 
+        show_res = True
 
-
-
+        if show_res:
+            plt.plot(x, y, 'k', label='Original data')
+            plt.plot(x, y_droite, 'r', label='Fitted line')
+            plt.legend()
+            plt.show()
 
 
 
