@@ -1,8 +1,12 @@
 #include "Motor_Controller.h"
 
-double Kp_m = 0.0672;
-double Ki_m = 0.7075;
-double Kd_m = 0.0034;
+double Kp_m = 5;
+double Ki_m = 0;
+double Kd_m = 0;
+
+// double Kp_m = 0.0672;
+// double Ki_m = 0.7075;
+// double Kd_m = 0.0034;
 
 static void measureSpeedTimer(){
     flywheelMotor.measureSpeed();

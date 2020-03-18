@@ -9,11 +9,20 @@
 
 // Define
 #define LED_PIN 13
+#define IR_INTERVAL 250 //In ms
+
+// Associations bouttons
+#define STABILIZE OFF
 
 // Prototypes
 void readSerial();
+void readRemote();
+
 void start();
 void stop();
+void startController();
+void stopController();
+
 void IMU_test();
 void goToAccel();
 
@@ -22,10 +31,12 @@ double goalAccel;   //To test motor acceleration
 String commande;    //Command read through serial port
 
 unsigned int prevTime = 0;
+unsigned long currentTime = 0;
+
 
 bool motorOn = false;
 bool followAccel = false;
-bool toStabilise = true;
+bool toStabilise = false;
 
 // ================================================================
 // ===                      INITIAL SETUP                       ===
@@ -35,13 +46,11 @@ void setup() {
     Serial.begin(9600);
 
     //! Configure LED for output
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, HIGH);
+    IR_Setup();
 
-    while(!Serial.available());
+    // pinMode(LED_PIN, OUTPUT);
+    // digitalWrite(LED_PIN, HIGH);
 
-    //! Start stabilizer
-    mainController.startController();
 }
 
 
@@ -49,8 +58,14 @@ void setup() {
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 void loop() {
+    currentTime = millis();
+
     //! Read Serial Input
 	//readSerial();
+    if(currentTime - prevTime > IR_INTERVAL){
+        prevTime = currentTime;
+        readRemote();
+    }
 
     //! To go to a specific acceleration
     if(followAccel)
@@ -59,7 +74,37 @@ void loop() {
     //! To stabilize the bike
     if(toStabilise)
         mainController.computeCommand();
+    
+}
 
+void readRemote(){
+    unsigned long val = IR_receive();
+    switch (val)
+    {
+    case STABILIZE:
+        Serial.println("Toggle stabilization");
+        toStabilise = !toStabilise;
+        if(toStabilise)
+            startController();
+        else
+            stopController();
+        break;
+
+    case UP:
+        Serial.println("UP");
+        break;
+
+    default:
+        break;
+    }
+}
+
+void startController(){
+    mainController.startController();
+}
+
+void stopController(){
+    mainController.stopController();
 }
 
 // Fonction de test

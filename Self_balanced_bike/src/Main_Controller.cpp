@@ -2,7 +2,7 @@
 
 double Kp_v = 1000;
 double Ki_v = 0;
-double Kd_v = 0;
+double Kd_v = 100;
 
 MainController mainController;
 
@@ -30,6 +30,7 @@ void MainController::startController(){
 
 void MainController::stopController(){
     _toStabilize = false;
+    flywheelMotor.stopMotor();
 }
 
 
