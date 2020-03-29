@@ -13,14 +13,13 @@ MainController::MainController():_anglePID(&_currentAngle, &_speedOutput, &_targ
     _Kd = Kd_v;
     
     _anglePID.SetMode(AUTOMATIC);
-    _anglePID.SetOutputLimits(-2000, 2000);
+    _anglePID.SetOutputLimits(-MAX_SPEED, MAX_SPEED);
     _anglePID.SetTunings(_Kp, _Ki, _Kd);
     _anglePID.SetSampleTime(COMPUTE_INTERVAL_ANGLE/1000);
 
     flywheelMotor.setBikeAngle(&_currentAngle);
 
     _imuRdy = IMU_Setup();
-
 }
 
 void MainController::startController(){
@@ -31,6 +30,12 @@ void MainController::startController(){
 void MainController::stopController(){
     _toStabilize = false;
     flywheelMotor.stopMotor();
+    Serial.print("!");
+    Serial.print(_anglePID.GetKp());
+    Serial.print(", ");
+    Serial.print(_anglePID.GetKi());
+    Serial.print(", ");
+    Serial.println(_anglePID.GetKd());
 }
 
 
@@ -64,6 +69,11 @@ double MainController::getAngle(){return _currentAngle;}
 
 double MainController::getTargetAngle(){return _targetAngle;}
 
+double MainController::getKp(){return _anglePID.GetKp();}
+
+double MainController::getKi(){return _anglePID.GetKi();}
+
+double MainController::getKd(){return _anglePID.GetKd();}
 
 void MainController::setTargetAngle(double newAngle){_targetAngle = newAngle;}
 

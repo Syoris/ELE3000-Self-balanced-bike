@@ -5,6 +5,8 @@
 #include <PID_v1.h>
 
 //Define
+#define MAX_SPEED 8000 //Max motor speed [deg/sec]
+
 #define CW true
 #define CCW false
 
@@ -17,7 +19,7 @@
 #define MOTOR_PIN_2 3
 
 #define COUNT_PER_TURN 44
-#define GEARBOX_RATIO 23.1
+#define GEARBOX_RATIO 4.4 //23.1
 #define COUNT_TO_ANGLE 360/(GEARBOX_RATIO*COUNT_PER_TURN)
 #define USEC_TO_SEC 1000000
 
@@ -46,7 +48,7 @@ class FlywheelMotor{
         int _pin2 = MOTOR_PIN_2;
         
         //Pour options
-        bool _printTextData = true;
+        bool _printTextData = false;
 
     public:
         FlywheelMotor();

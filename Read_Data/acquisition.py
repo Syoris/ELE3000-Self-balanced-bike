@@ -15,33 +15,46 @@ class SerialDataClass:
         self.file_path = os.path.join("Data", self.data_name)
         self.ser = ''
 
-        self.Kp = 0.0672
-        self.Ki = 0.71
-        self.Kd = 0.0034
+        # self.KpM = 0.0672
+        # self.KiM = 0.71
+        # self.KdM = 0.0034
+        self.KpM = 0.07
+        self.KiM = 3.70
+        self.KdM = 0.00
 
-        self.data = {   "Target speed": [], 
+
+        self.KpV = 250
+        self.KiV = 0
+        self.KdV = 50
+
+        self.data = {   "Bike angle": [],
+                        "Target speed": [], 
                         "Current speed": [], 
                         "Command": [], 
-                        "Angle": [],
+                        "Motor angle": [],
                         "Time": [],
-                        "Kp":self.Kp,
-                        "Ki":self.Ki,
-                        "Kd":self.Kd,
+                        "KpM":self.KpM,
+                        "KiM":self.KiM,
+                        "KdM":self.KdM,
+                        "KpV":self.KpV,
+                        "KiV":self.KiV,
+                        "KdV":self.KdV,
                         "Step amplitude": 0}
 
-        self.data_interval = 0.005    # 1ms
-
-        self.targetSpeed = 1500
-
+        self.targetSpeed = 0
 
         self.commands = {
             "run" : self.readSerialData,
             "show" : self.showData,
             "load" : self.loadData,
+            "save" : self.saveData,
             "setSpeed" : self.setTargetSpeed,
-            "setKp" : self.setKp,
-            "setKi" : self.setKi,
-            "setKd" : self.setKd,
+            "setKpM" : self.setKpM,
+            "setKiM" : self.setKiM,
+            "setKdM" : self.setKdM,
+            "setKpV" : self.setKpV,
+            "setKiV" : self.setKiV,
+            "setKdV" : self.setKdV,
             "step" : self.step,
             "idParam": self.parameterIdentification,
             "help" : self.print_help,
@@ -53,33 +66,46 @@ class SerialDataClass:
         x = self.data["Time"]
 
         # Plot
-        plt.plot(x, self.data["Target speed"], 'r', label="Target speed [deg/s]")
-        plt.plot(x, self.data["Current speed"], 'b', label="Current speed [deg/s]" )
-        plt.plot(x, self.data["Command"], 'k', label="Command [V]")
-        plt.plot(x, self.data["Angle"], 'g', label="Angle [deg]")
+        fig, axs = plt.subplots(2, sharex=True)
+        fig.suptitle(self.data_name)
+        axs[0].plot(x, self.data["Target speed"], 'r', label="Target speed [deg/s]")
+        axs[0].plot(x, self.data["Current speed"], 'b', label="Current speed [deg/s]" )
+        # axs[0].plot(x, self.data["Motor angle"], 'g', label="Angle [deg]")
+        axs[0].legend()
+
+        axs[1].plot(x, self.data["Bike angle"], 'g', label="Bike angle [deg]")
+        axs[1].plot(x, self.data["Command"], 'k', label="Command [V]")
+        axs[1].legend()
 
 
-        plt.title(self.data_name)
         plt.xlabel('Temps (sec)')
-        plt.legend()
         plt.show()
 
     # Read Serial data
-    def readSerialData(self):
+    def readSerialData(self, in_type=""):
+        self.data["Bike angle"] = []
         self.data["Target speed"] = []
         self.data["Current speed"] = []
         self.data["Command"] = []
-        self.data["Angle"] = []
+        self.data["Motor angle"] = []
         self.data["Time"] = []
 
-        input_type = input("Input type(step/ramp): ")
+        if in_type == "": input_type = input("Input type(stabilize/step/ramp): ")
+        elif in_type=="s": input_type = "stabilize"
+        elif in_type=="ramp": input_type = "ramp"
+        elif in_type=="step": input_type = "step"
+
+        
+
         if input_type == "step":
             goalSpeed = input("Target speed: ")
             self.setTargetSpeed(goalSpeed)
             startCom = "#On "
         elif input_type == "ramp":
             goalAccel = input("Target accel: ")
-            startCom = "#accel " + goalAccel + " "
+            startCom = "#ramp " + goalAccel + " "
+        elif input_type == "stabilize":
+            startCom = "#stabilize "
         else:
             print("Invalid type")
             startCom = " "
@@ -101,11 +127,12 @@ class SerialDataClass:
                     ser_data[0] = ser_data[0][1:-1]
                     ser_data[-1] = ser_data[-1].rstrip(', \n\r')
                     
-                    self.data["Target speed"].append(float(ser_data[0]))    # Target Speed
-                    self.data["Current speed"].append(float(ser_data[1]))    # Current Speed
-                    self.data["Command"].append(float(ser_data[2])*6/256)  # Command
-                    self.data["Angle"].append(float(ser_data[3]))  # Angle
-                    self.data["Time"].append(float(ser_data[4])) #Time
+                    self.data["Bike angle"].append(float(ser_data[0])) 
+                    self.data["Target speed"].append(float(ser_data[1]))    # Target Speed
+                    self.data["Current speed"].append(float(ser_data[2]))    # Current Speed
+                    self.data["Command"].append(float(ser_data[3])*6/256)  # Command
+                    self.data["Motor angle"].append(float(ser_data[4]))  # Angle
+                    self.data["Time"].append(float(ser_data[5])) #Time
 
         except KeyboardInterrupt:
             print("Interrupted")
@@ -114,11 +141,20 @@ class SerialDataClass:
             serialData = self.ser.readline().decode('utf-8')
             while(not (serialData.startswith('!'))):
                 serialData = self.ser.readline().decode('utf-8')
-
+            serialData2 = self.ser.readline().decode('utf-8')
+            
             ser_data = serialData.replace(' ', '')
             ser_data = ser_data.split(',')
             ser_data[0] = ser_data[0][1:]
             ser_data[-1] = ser_data[-1].rstrip(', \n\r')
+            print("Gains du moteur")
+            print("Kp:", ser_data[0], "\tKi:", ser_data[1], "\tKd:", ser_data[2] )
+
+            ser_data = serialData2.replace(' ', '')
+            ser_data = ser_data.split(',')
+            ser_data[0] = ser_data[0][1:]
+            ser_data[-1] = ser_data[-1].rstrip(', \n\r')
+            print("Gains du vélo")
             print("Kp:", ser_data[0], "\tKi:", ser_data[1], "\tKd:", ser_data[2] )
 
             self.ser.flushInput()
@@ -127,7 +163,7 @@ class SerialDataClass:
             sub_val = self.data["Time"][0]
             self.data["Time"] = [(x - sub_val)/1000 for x in self.data["Time"]]
 
-            self.saveData()
+            # self.saveData()
 
     def saveData(self):
         ans = input("Save data? (y/n) : ")
@@ -157,10 +193,14 @@ class SerialDataClass:
             print("Invalid function")
 
         if ok_function:
-            if arg != '':
-                func(arg)
-            else:
-                func()
+            try:
+                if arg != '':
+                    func(arg)
+                else:
+                    func()
+            except TypeError:
+                print("Invalid parameters")
+                return
     
     # Connect to Serial Port
     def connect(self):
@@ -178,9 +218,12 @@ class SerialDataClass:
                 raise
         
         self.setTargetSpeed(self.targetSpeed)
-        self.setKp(self.Kp)
-        self.setKi(self.Ki)
-        self.setKd(self.Kd)
+        self.setKpM(self.KpM)
+        self.setKiM(self.KiM)
+        self.setKdM(self.KdM)
+        self.setKpV(self.KpV)
+        self.setKiV(self.KiV)
+        self.setKdV(self.KdV)
     
     def stop(self):
         os._exit(0)
@@ -211,33 +254,63 @@ class SerialDataClass:
         serialData2 = self.ser.readline().decode('utf-8')
         print(serialData2, end='')
     
-    def setKp(self, Kp):
+    def setKpM(self, Kp):
         self.ser.flushInput()
         self.ser.flushOutput()
-        self.Kp = Kp
-        commande = "#setKp " + str(Kp) + " "
+        self.KpM = Kp
+        commande = "#setKpM " + str(Kp) + " "
         self.ser.write(commande.encode())
         self.ser.readline().decode('utf-8')
         serialData2 = self.ser.readline().decode('utf-8')
         print(serialData2, end='')
     
-    def setKi(self, Ki):
+    def setKiM(self, Ki):
         self.ser.flushInput()
         self.ser.flushOutput()
-        self.Ki = Ki
-        commande = "#setKi " + str(Ki) + " "
+        self.KiM = Ki
+        commande = "#setKiM " + str(Ki) + " "
         self.ser.write(commande.encode())
-        serialData1 = self.ser.readline().decode('utf-8')
+        self.ser.readline().decode('utf-8')
         serialData2 = self.ser.readline().decode('utf-8')
         print(serialData2, end='')
 
-    def setKd(self, Kd):
+    def setKdM(self, Kd):
         self.ser.flushInput()
         self.ser.flushOutput()
-        self.Kd = Kd
-        commande = "#setKd " + str(Kd) + " "
+        self.KdM = Kd
+        commande = "#setKdM " + str(Kd) + " "
         self.ser.write(commande.encode())
-        serialData1 = self.ser.readline().decode('utf-8')
+        self.ser.readline().decode('utf-8')
+        serialData2 = self.ser.readline().decode('utf-8')
+        print(serialData2, end='')
+
+    def setKpV(self, Kp):
+        self.ser.flushInput()
+        self.ser.flushOutput()
+        self.KpV = Kp
+        commande = "#setKpV " + str(Kp) + " "
+        self.ser.write(commande.encode())
+        self.ser.readline().decode('utf-8')
+        serialData2 = self.ser.readline().decode('utf-8')
+        print(serialData2, end='')
+    
+    def setKiV(self, Ki):
+        self.ser.flushInput()
+        self.ser.flushOutput()
+        self.KiV = Ki
+        commande = "#setKiV " + str(Ki) + " "
+        self.ser.write(commande.encode())
+        self.ser.readline().decode('utf-8')
+        serialData2 = self.ser.readline().decode('utf-8')
+        print(serialData2, end='')
+
+    def setKdV(self, Kd):
+        self.ser.flushInput()
+        self.ser.flushOutput()
+        self.KdV = Kd
+        commande = "#setKdV " + str(Kd) + " "
+        self.ser.write(commande.encode())
+        self.ser.readline().decode('utf-8')
         serialData2 = self.ser.readline().decode('utf-8')
         print(serialData2, end='')
 
@@ -270,11 +343,12 @@ class SerialDataClass:
                 ser_data[0] = ser_data[0][1:-1]
                 ser_data[-1] = ser_data[-1].rstrip(', \n\r')
                 
-                self.data["Target speed"].append(float(ser_data[0]))    # Target Speed
-                self.data["Current speed"].append(float(ser_data[1]))    # Current Speed
-                self.data["Command"].append(float(ser_data[2])*6/256)  # Command
-                self.data["Angle"].append(float(ser_data[3]))  # Angle
-                self.data["Time"].append(float(ser_data[4]))  # Angle
+                self.data["Bike angle"].append(float(ser_data[0])) 
+                self.data["Target speed"].append(float(ser_data[1]))    # Target Speed
+                self.data["Current speed"].append(float(ser_data[2]))    # Current Speed
+                self.data["Command"].append(float(ser_data[3])*6/256)  # Command
+                self.data["Motor angle"].append(float(ser_data[4]))  # Angle
+                self.data["Time"].append(float(ser_data[5])) #Time
 
             elif serialData.startswith('*'):
                 break
@@ -285,6 +359,7 @@ class SerialDataClass:
         self.data["Time"] = [(x - sub_val)/1000 for x in self.data["Time"]]
 
         # Calculate motor parameters
+        self.ser.flushInput()
         ans = input("Motor parameters identification? (y/n) : ")
         if ans is "y":
             self.parameterIdentification()
@@ -298,7 +373,7 @@ class SerialDataClass:
         step_amplitude = self.data["Step amplitude"]
         start_data = 50
 
-        y = self.data["Angle"]
+        y = self.data["Motor angle"]
         x = self.data["Time"]
 
         y = y[start_data:-1]
@@ -326,7 +401,7 @@ class SerialDataClass:
             plt.plot(x, y_droite, 'r', label='Fitted line')
             plt.legend()
             plt.show()
-
+            plt.title("Parameter identification")
 
 
 def main():

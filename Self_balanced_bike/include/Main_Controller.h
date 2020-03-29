@@ -6,7 +6,7 @@
 #include <IMU.h>
 #include <Motor_Controller.h>
 
-#define COMPUTE_INTERVAL_ANGLE 10000 //Interval to compute PID for speed control (in uS)
+#define COMPUTE_INTERVAL_ANGLE 5000 //Interval to compute PID for speed control (in uS)
 
 
 class MainController{
