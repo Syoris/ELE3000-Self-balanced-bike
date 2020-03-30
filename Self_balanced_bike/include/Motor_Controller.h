@@ -2,7 +2,7 @@
 #define MOTOR_CONTROLLER_H
 
 #include "Encoder.h"
-#include <PID_v1.h>
+#include <PID_C.h>
 
 //Define
 #define MAX_SPEED 8000 //Max motor speed [deg/sec]

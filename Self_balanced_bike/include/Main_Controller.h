@@ -2,7 +2,7 @@
 #define MAIN_CONTROLLER_H
 
 #include <Arduino.h>
-#include <PID_v1.h>
+#include <PID_C.h>
 #include <IMU.h>
 #include <Motor_Controller.h>
 
