@@ -40,6 +40,9 @@ bool motorOn = false;
 bool followAccel = false;
 bool toStabilise = false;
 
+unsigned int computInt;
+double speedInc;
+
 // ================================================================
 // ===                      INITIAL SETUP                       ===
 // ================================================================
@@ -71,12 +74,13 @@ void loop() {
 
     //! To go to a specific acceleration
     if(followAccel){
-        if(currentTime - prevTimeAccel < 3000)
+        if(currentTime - prevTimeAccel < 1000)
             goToAccel();
         else{
             Serial.println("Timeout");
             followAccel = false;
             stopController();
+            Serial.println("*");
         }
     }
 
@@ -84,6 +88,8 @@ void loop() {
     if(toStabilise)
         mainController.computeCommand();
 
+    // mainController.updateAngle();
+    // Serial.println(mainController.getAngle());
 }
 
 void readRemote(){
@@ -122,12 +128,19 @@ void stopController(){
 
 // Fonction de test
 void goToAccel(){
-    static unsigned int computInt = COMPUTE_INTERVAL/1000;
-    static double speedInc = goalAccel/1000*computInt;
 
     if(currentTime - prevTime > computInt){
-        flywheelMotor.setTargetSpeed(flywheelMotor.getTargetSpeed() + speedInc);
+        double newSpeed = flywheelMotor.getTargetSpeed() + speedInc;
+        flywheelMotor.setTargetSpeed(newSpeed);
         prevTime = currentTime;
+        // Serial.print("Goal accel: ");
+        // Serial.print(goalAccel);
+        // Serial.print("\t Compute int: ");
+        // Serial.print(computInt);
+        // Serial.print("\t Speed inc:");
+        // Serial.print(speedInc);
+        // Serial.print("\t New speed:");
+        // Serial.println(newSpeed);
     }
 }
 
@@ -207,6 +220,8 @@ void readSerial(){
                 Serial.print("Going to [deg/sec^2]: ");
                 Serial.println(accel);
                 goalAccel = accel;
+                computInt = COMPUTE_INTERVAL/1000;
+                speedInc = goalAccel/1000*computInt;
                 followAccel = true;
                 prevTimeAccel = millis();
                 currentTime = millis();

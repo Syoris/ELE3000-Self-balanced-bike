@@ -91,7 +91,7 @@ void FlywheelMotor::measureSpeed(){
 
 //Set speed of the motor, dir:CW or CCW
 void FlywheelMotor::setMotorSpeed(int speed, bool dir){
-    if(dir == CW){
+    if(dir == CCW){
         analogWrite(_pin1, 0);
         analogWrite(_pin2, speed);
     }
@@ -107,8 +107,8 @@ void FlywheelMotor::computeCommand(){
     if(_speedPID.Compute()){
         printMotorData();
 
-        bool dir = _speedCommand < 0 ? CCW : CW;
-        if(dir == CW){
+        bool dir = _speedCommand < 0 ? CW : CCW;
+        if(dir == CCW){
             analogWrite(_pin1, 0);
             analogWrite(_pin2, abs(_speedCommand));
         }

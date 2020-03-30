@@ -6,15 +6,16 @@
 
 //Define
 #define MAX_SPEED 8000 //Max motor speed [deg/sec]
+#define MAX_ACCEL 100000 //Max motor accell [deg/sec^2]
 
 #define CW true
 #define CCW false
 
 #define DEBUG_MOTOR 0
 
-#define ENC_PIN_1 12
-#define ENC_PIN_2 11
-
+#define ENC_PIN_1 11
+#define ENC_PIN_2 12
+ 
 #define MOTOR_PIN_1 4
 #define MOTOR_PIN_2 3
 

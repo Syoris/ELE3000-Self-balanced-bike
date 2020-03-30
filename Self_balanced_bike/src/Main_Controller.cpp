@@ -6,14 +6,14 @@ double Kd_v = 100;
 
 MainController mainController;
 
-MainController::MainController():_anglePID(&_currentAngle, &_speedOutput, &_targetAngle, Kp_v, Ki_v, Kd_v, DIRECT){
+MainController::MainController():_anglePID(&_currentAngle, &_accelOutput, &_targetAngle, Kp_v, Ki_v, Kd_v, DIRECT){
     _targetAngle = 0;
     _Kp = Kp_v;
     _Ki = Ki_v;
     _Kd = Kd_v;
     
     _anglePID.SetMode(AUTOMATIC);
-    _anglePID.SetOutputLimits(-MAX_SPEED, MAX_SPEED);
+    _anglePID.SetOutputLimits(-MAX_ACCEL, MAX_ACCEL);
     _anglePID.SetTunings(_Kp, _Ki, _Kd);
     _anglePID.SetSampleTime(COMPUTE_INTERVAL_ANGLE/1000);
 
@@ -47,17 +47,28 @@ void MainController::updateAngle(){
 }
 
 void MainController::computeCommand(){
+    static unsigned int computInt = COMPUTE_INTERVAL_ANGLE/1000;
     if(_toStabilize){
 
         updateAngle();
 
         if(_anglePID.Compute()){
-            flywheelMotor.setTargetSpeed(_speedOutput);
+            double speedInc = (_accelOutput*computInt)/1000;
+            double newSpeed = flywheelMotor.getTargetSpeed() + speedInc;
+            newSpeed =  newSpeed > MAX_SPEED? MAX_SPEED  : newSpeed;
+            newSpeed =  newSpeed < -MAX_SPEED? -MAX_SPEED: newSpeed;
+
+            flywheelMotor.setTargetSpeed(newSpeed);
 
             // Serial.print("Current Angle: ");
             // Serial.print(_currentAngle);
-            // Serial.print("\t Flywheel speed: ");
-            // Serial.println(_speedOutput);
+            // Serial.print("\t Target accel: ");
+            // Serial.print(_accelOutput);
+            // Serial.print("\t Speed inc: ");
+            // Serial.print(_accelOutput);
+            // Serial.print("\t Target accel: ");
+            // Serial.println(_accelOutput);
+
         }
     }
 }

@@ -15,7 +15,7 @@ class MainController{
 
         double _currentAngle;
         double _targetAngle;
-        double _speedOutput;    //Target speed of flywheel
+        double _accelOutput;    //Target speed of flywheel
 
         double _Kp, _Ki, _Kd;
         float _ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector

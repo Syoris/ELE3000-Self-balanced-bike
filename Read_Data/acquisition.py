@@ -23,9 +23,9 @@ class SerialDataClass:
         self.KdM = 0.00
 
 
-        self.KpV = 250
+        self.KpV = 5000.00
         self.KiV = 0
-        self.KdV = 50
+        self.KdV = 0
 
         self.data = {   "Bike angle": [],
                         "Target speed": [], 
@@ -72,10 +72,21 @@ class SerialDataClass:
         axs[0].plot(x, self.data["Current speed"], 'b', label="Current speed [deg/s]" )
         # axs[0].plot(x, self.data["Motor angle"], 'g', label="Angle [deg]")
         axs[0].legend()
+        axs[0].grid(True, which='both')
+        axs[0].axhline(y=0, color='k')
+        axs[0].axvline(x=0, color='k')
+        axs[0].set_xlim(xmin=0)
 
         axs[1].plot(x, self.data["Bike angle"], 'g', label="Bike angle [deg]")
         axs[1].plot(x, self.data["Command"], 'k', label="Command [V]")
         axs[1].legend()
+        axs[1].grid(True, which='both')
+
+        axs[1].axvline(x=0, color='k')
+        axs[1].axhline(y=0, color='k')
+
+        axs[1].set_xlim(xmin=0)
+
 
 
         plt.xlabel('Temps (sec)')
@@ -133,37 +144,42 @@ class SerialDataClass:
                     self.data["Command"].append(float(ser_data[3])*6/256)  # Command
                     self.data["Motor angle"].append(float(ser_data[4]))  # Angle
                     self.data["Time"].append(float(ser_data[5])) #Time
+                
+                elif serialData.startswith('*'):
+                    print("Timeout")
+                    break
 
         except KeyboardInterrupt:
             print("Interrupted")
             self.ser.write(endCom.encode())
-            self.ser.flushInput()
+
+        self.ser.flushInput()
+        serialData = self.ser.readline().decode('utf-8')
+        while(not (serialData.startswith('!'))):
             serialData = self.ser.readline().decode('utf-8')
-            while(not (serialData.startswith('!'))):
-                serialData = self.ser.readline().decode('utf-8')
-            serialData2 = self.ser.readline().decode('utf-8')
-            
-            ser_data = serialData.replace(' ', '')
-            ser_data = ser_data.split(',')
-            ser_data[0] = ser_data[0][1:]
-            ser_data[-1] = ser_data[-1].rstrip(', \n\r')
-            print("Gains du moteur")
-            print("Kp:", ser_data[0], "\tKi:", ser_data[1], "\tKd:", ser_data[2] )
+        serialData2 = self.ser.readline().decode('utf-8')
+        
+        ser_data = serialData.replace(' ', '')
+        ser_data = ser_data.split(',')
+        ser_data[0] = ser_data[0][1:]
+        ser_data[-1] = ser_data[-1].rstrip(', \n\r')
+        print("Gains du moteur")
+        print("Kp:", ser_data[0], "\tKi:", ser_data[1], "\tKd:", ser_data[2] )
 
-            ser_data = serialData2.replace(' ', '')
-            ser_data = ser_data.split(',')
-            ser_data[0] = ser_data[0][1:]
-            ser_data[-1] = ser_data[-1].rstrip(', \n\r')
-            print("Gains du vélo")
-            print("Kp:", ser_data[0], "\tKi:", ser_data[1], "\tKd:", ser_data[2] )
+        ser_data = serialData2.replace(' ', '')
+        ser_data = ser_data.split(',')
+        ser_data[0] = ser_data[0][1:]
+        ser_data[-1] = ser_data[-1].rstrip(', \n\r')
+        print("Gains du vélo")
+        print("Kp:", ser_data[0], "\tKi:", ser_data[1], "\tKd:", ser_data[2] )
 
-            self.ser.flushInput()
+        self.ser.flushInput()
 
-            # Correct time
-            sub_val = self.data["Time"][0]
-            self.data["Time"] = [(x - sub_val)/1000 for x in self.data["Time"]]
+        # Correct time
+        sub_val = self.data["Time"][0]
+        self.data["Time"] = [(x - sub_val)/1000 for x in self.data["Time"]]
 
-            # self.saveData()
+        # self.saveData()
 
     def saveData(self):
         ans = input("Save data? (y/n) : ")
