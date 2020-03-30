@@ -27,48 +27,33 @@ s = tf('s');
 H = Km/ ( Tau_m*s + 1 ); %phi_dot selon U
 G = (-Jr*s)/( (Jv+Jr+Mv*Lv^2+Mr*Lr^2)*s^2 - (Mv*Lv+Mr*Lr)*g); %Theta(s)/Phi_dot(s)  => Angle du vélo selon vitesse roue inertielle
 
-
-
-%% Contrôleur du moteur
-%% Designeur de Matalab
-[num_m, den_m] = tfdata(Cm, 'v');
-Kp_m = num_m(1);
-Kd_m = 0; %num_m(1);
-Ki_m = num_m(2);
-
-%% Pôles alignés
-close all
+% ----- Contrôleur du vélo ----- 
+% Pôles alignés
 clc
+close all
 
-p = 10;
+A = Mv*Lv^2 + Mr*Lr^2;
+B = (Mv*Lv + Mr*Lr)*g;
+
+p = 10; % Pôles à -10+/-10j
 p1 = s+p+p*1i;
 p2 = s+p-p*1i;
 poles = p1*p2;
 
-[num_m, den_m] = tfdata(poles, 'v');
-Kp_m = (num_m(2) - 1)/Km;
-Ki_m = num_m(3)/Km;
-Kd_m = (1-Tau_m)/Km;
+[num_v, den_v] = tfdata(poles, 'v');
+a_v = num_v(2);
+b_v = num_v(3);
 
-sim("Simulink/Moteur_BF")
-dataList = {Phi_dot_des 'r' 'Commande [deg/sec]'; 
-            Phi_dot 'b' 'Vitesse [deg/s]'};
-            %Phi 'g' 'Position [deg]'};
-dataOpt = {U 'k' 'Tension [V]'};
+Kp_v = a_v/Jr;
+Ki_v = (b_v-B)/Jr;
+Kd_v = (1+A+Jv)/Jr - 1;
 
-plot_func('Moteur en BF', 'Temps (s)', '', dataList, dataOpt);
+fprintf("---- Gains du vélo ----\n");
+fprintf("\tKp: %4.2f\n", Kp_v)
+fprintf("\tKi: %4.2f\n", Ki_v)
+fprintf("\tKd: %4.2f\n", Kd_v)
+
+G2 = feedback(G, Kd_v*s);
+G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
 
 
-
-%% Contrôleur du vélo
-%% Designeur de Matlab
-load Cv
-
-[num_v, den_v] = tfdata(Cv, 'v');
-Kp_v = num_v(2);
-Kd_v = num_v(1);
-Ki_v = num_v(3);
-
-%% Pôles alignés
-A = Mv*Lv^2 + Mr*Lr^2;
-B = Mv*Lv 
