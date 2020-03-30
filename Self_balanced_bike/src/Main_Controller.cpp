@@ -42,8 +42,8 @@ void MainController::stopController(){
 void MainController::updateAngle(){
     if (!_imuRdy) return; //Check IMU is working
 
-    IMU_Compute(_ypr);
-    _currentAngle = _ypr[1];
+    IMU_Compute(_ypr, _gyro);
+    _currentAngle = _ypr[1] - 4; // -3 to correct sensor
 }
 
 void MainController::computeCommand(){
@@ -77,6 +77,7 @@ void MainController::computeCommand(){
 //! Interface
 double MainController::getAngle(){return _currentAngle;} 
 
+int32_t MainController::getAngularSpeed(){return _gyro[0];}
 
 double MainController::getTargetAngle(){return _targetAngle;}
 

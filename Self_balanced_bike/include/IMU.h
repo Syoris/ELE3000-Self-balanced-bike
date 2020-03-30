@@ -27,6 +27,6 @@ extern bool printData;  // Print data to debug
 void dmpDataReady();
 bool IMU_Setup();
 bool checkConnection();
-void IMU_Compute(float* ypr);
+void IMU_Compute(float* ypr, int32_t* gyro);
 
 #endif

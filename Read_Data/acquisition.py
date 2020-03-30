@@ -6,7 +6,7 @@ matplotlib.use('TkAgg')
 from matplotlib import pyplot as plt
 import time
 
-serPort = "COM22"
+serPort = "COM3"
 
 class SerialDataClass:
     def __init__(self):
@@ -23,9 +23,9 @@ class SerialDataClass:
         self.KdM = 0.00
 
 
-        self.KpV = 5000.00
+        self.KpV = 5250.00
         self.KiV = 0
-        self.KdV = 0
+        self.KdV = 250
 
         self.data = {   "Bike angle": [],
                         "Target speed": [], 

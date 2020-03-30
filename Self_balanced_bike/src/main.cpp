@@ -9,10 +9,14 @@
 
 // Define
 #define LED_PIN 13
-#define IR_INTERVAL 250 //In ms
+#define SERVO_PIN 10
+#define IR_INTERVAL 100 //In ms
+#define SERVO_MAX_SPEED 3
 
 // Associations bouttons
 #define STABILIZE OFF
+#define SPEED_UP UP
+#define SPEED_DWN DOWN
 
 // Prototypes
 void readSerial();
@@ -25,6 +29,8 @@ void stopController();
 
 void IMU_test();
 void goToAccel();
+
+void setServoSpeed(int speed);
 
 // Variables
 double goalAccel;   //To test motor acceleration
@@ -43,6 +49,9 @@ bool toStabilise = false;
 unsigned int computInt;
 double speedInc;
 
+Servo servo;
+int servoSpeed = 0;
+
 // ================================================================
 // ===                      INITIAL SETUP                       ===
 // ================================================================
@@ -53,11 +62,15 @@ void setup() {
     //! Configure LED for output
     IR_Setup();
 
+    servo.attach(SERVO_PIN);
+    setServoSpeed(servoSpeed);
+
     // pinMode(LED_PIN, OUTPUT);
     // digitalWrite(LED_PIN, HIGH);
 
 }
 
+int32_t angSpeed;
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
@@ -68,7 +81,7 @@ void loop() {
     //! Read Serial Input
     if(currentTime - prevTimeCommand > IR_INTERVAL){
         prevTimeCommand = currentTime;
-        //readRemote();
+        // readRemote();
 	    readSerial();
     }
 
@@ -88,9 +101,16 @@ void loop() {
     if(toStabilise)
         mainController.computeCommand();
 
-    // mainController.updateAngle();
-    // Serial.println(mainController.getAngle());
+    mainController.updateAngle();
+    angSpeed = mainController.getAngularSpeed();
+    Serial.print("Angle: ");
+    Serial.print(mainController.getAngle());
+
+    Serial.print("\tAngular speed: ");
+    Serial.println(angSpeed);
+    
 }
+
 
 void readRemote(){
     unsigned long val = IR_receive();
@@ -99,19 +119,75 @@ void readRemote(){
     case STABILIZE:
         Serial.println("Toggle stabilization");
         toStabilise = !toStabilise;
+        servoSpeed = 0;
+        setServoSpeed(servoSpeed);
+
         if(toStabilise)
             startController();
         else
             stopController();
         break;
 
-    case UP:
-        Serial.println("UP");
+    case SPEED_UP:
+        servoSpeed += 1;
+        servoSpeed = (servoSpeed > SERVO_MAX_SPEED) ? SERVO_MAX_SPEED : servoSpeed;
+        Serial.print("Speed up: ");
+        Serial.println(servoSpeed);
+        setServoSpeed(servoSpeed);
+        break;
+    
+    case SPEED_DWN:
+        servoSpeed -= 1;
+        servoSpeed = (servoSpeed < -SERVO_MAX_SPEED) ? -SERVO_MAX_SPEED : servoSpeed;
+        Serial.print("Speed down: ");
+        Serial.println(servoSpeed);
+        setServoSpeed(servoSpeed);
         break;
 
     default:
         break;
     }
+}
+
+void setServoSpeed(int speed){
+    static int speedVal = 0;
+    static int servoSpeeds[3] = {5, 15, 30};
+    switch(speed)
+    {
+    case -3:
+        speedVal = 90 + servoSpeeds[2];
+        break;
+    
+    case -2:
+        speedVal = 90 + servoSpeeds[1];
+        break;
+    
+    case -1:
+        speedVal = 90 + servoSpeeds[0];
+        break;
+
+    case 0:
+        speedVal = 90;
+        break;
+
+    case 1:
+        speedVal = 90 - servoSpeeds[0];
+        break;
+    
+    case 2:
+        speedVal = 90 - servoSpeeds[1];
+        break;
+
+    case 3:
+        speedVal = 90 - servoSpeeds[2];
+        break;
+
+    default:
+        speedVal = 90;
+        break;
+    }
+    
+    servo.write(speedVal);
 }
 
 void startController(){

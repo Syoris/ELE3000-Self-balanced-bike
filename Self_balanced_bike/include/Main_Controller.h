@@ -18,7 +18,8 @@ class MainController{
         double _accelOutput;    //Target speed of flywheel
 
         double _Kp, _Ki, _Kd;
-        float _ypr[3];           // [yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+        float _ypr[3];          //[yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
+        int32_t _gyro[3];         //Angular speed
 
         bool _toStabilize = false;
         bool _imuRdy = false;
@@ -35,6 +36,7 @@ class MainController{
 
         //! Interface
         double getAngle();
+        int32_t getAngularSpeed();
         double getTargetAngle();
         double getKp();
         double getKi();

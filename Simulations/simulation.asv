@@ -8,17 +8,13 @@ Lv = 4/100;                  %Distance sol-CM [m]
 Jv = 224468.05/(1000^3);     %Inertie du vélo [Kg*m^2]
 
 %Roue inertielle
-Mp = 17/1000;         %Masse de la roue en plastique [kg]
-Jp = 14826/(1000^3);    %Inertie du plastique[Kg*m^2]
+Mp = 15.73/1000;         %Masse de la roue en plastique [kg]
+Jp = 228418/(1000^3);    %Inertie du plastique[Kg*m^2]
 
-Mm = 74/1000;   %Masse du washer en métal [kg]   
-Rm = 32/1000;   %Rayon total du washer [m]
-rm = 14/1000;   %Rayon intérieur du washer [m]
-Jm = Mm/2*(Rm^2 + rm^2);
+Mm = 74/1000;   
 
-Mr = 165;
 Lr = 9/100;             %Distance sol-CM roue [m]
-Jr = 2*Jm+Jp;    %Inertie de la roue [Kg*m^2]
+Jr = 228418/(1000^3);    %Inertie de la roue [Kg*m^2]
 
 %Moteur
 
@@ -118,8 +114,8 @@ B = (Mv*Lv + Mr*Lr)*g;
 
 % p_r = 97.1572;
 % p_i = 45.5004;
-p_r = 5;
-p_i = 5;
+p_r = 10;
+p_i = 10;
 p1 = s+p_r+p_i*1i;
 p2 = s+p_r-p_i*1i;
 poles = p1*p2;
