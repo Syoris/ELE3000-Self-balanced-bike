@@ -193,8 +193,8 @@ fprintf("Méthode par pôles alignés\n");
 A = Mv*Lv^2 + Mr*Lr^2;
 B = (Mv*Lv + Mr*Lr)*g;
 
-p_r = 0.5;
-p_i = 0.5;
+p_r = 10;
+p_i = 10;
 p1 = s+p_r+p_i*1i;
 p2 = s+p_r-p_i*1i;
 poles = p1*p2*(s+p_r);
@@ -216,21 +216,63 @@ fprintf("\tKd: %4.2f\n", Kd_v)
 G2 = feedback(G_a, Kd_v*s);
 G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
 
-% fprintf("\n---- Caratéristiques en BF ----\n");
-% G_bf
-% disp("Pôles: ")
-% disp(pole(G_bf))
-% disp("Gain statique: ")
-% disp(dcgain(G_bf))
-% disp("Zéro: ")
-% disp(zero(G_bf))
+fprintf("\n---- Caratéristiques en BF ----\n");
+G_bf
+disp("Pôles: ")
+disp(pole(G_bf))
+disp("Gain statique: ")
+disp(dcgain(G_bf))
+disp("Zéro: ")
+disp(zero(G_bf))
 
-%% Simulation Vélo, sans moteur
-% sim("Simulink/Velo_BF")
+%% Simplification pôles/zéro
+close all
+clc
+fprintf("Méthode par pôles alignés\n");
+A = Mv*Lv^2 + Mr*Lr^2;
+B = (Mv*Lv + Mr*Lr)*g;
+
+syms Kps Kis Kds
+a = 10;
+
+eqn1 = 2a
+
+Kp_v = -((Jv+Jr+A)*b_v+B)/Jr;
+Ki_v = -(Jv+Jr+A)*c_v/Jr;
+Kd_v = -(Jv+Jr+A)*a_v/Jr;
+
+fprintf("---- Gains du vélo ----\n");
+fprintf("\tKp: %4.2f\n", Kp_v)
+fprintf("\tKi: %4.2f\n", Ki_v)
+fprintf("\tKd: %4.2f\n", Kd_v)
+
+G2 = feedback(G_a, Kd_v*s);
+G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
+
+fprintf("\n---- Caratéristiques en BF ----\n");
+G_bf
+disp("Pôles: ")
+disp(pole(G_bf))
+disp("Gain statique: ")
+disp(dcgain(G_bf))
+disp("Zéro: ")
+disp(zero(G_bf))
+
+%% Simulation Vélo, sans moteur.
+clc
+close all
+sim("Simulink/Velo_BF")
 dataList = {Theta 'r' 'Angle vélo [deg]'};
             
-%dataOpt = {U 'k' 'Tension [V]'};
+dataOpt = {Phi_dot_des 'k' 'Vitesse des [deg/sec]';
+           Phi_dot_dot_des 'b' 'Accel des [deg^2/sec]'};
 
-plot_func('Velo en BF', 'Temps (s)', '', dataList);
+plot_func('Velo BF', 'Temps (s)', '', dataList, dataOpt);
+
+fprintf("---- Maximum ----\n");
+fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
+fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
+
+
 
 

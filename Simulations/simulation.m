@@ -68,6 +68,9 @@ fprintf("\tKp: %4.4f\n", Kp_m)
 fprintf("\tKi: %4.4f\n", Ki_m)
 fprintf("\tKd: %4.4f\n", Kd_m)  
 
+H2 = feedback(H, Kd_m*s);
+H_bf = minreal(feedback(H2*(Kp_m + Ki_m/s), 1));
+
 ramp = 35000;
 sim("Simulink/Moteur_BF")
 dataList = {Phi_dot_des 'r' 'Commande [deg/sec]'; 
@@ -193,8 +196,8 @@ fprintf("Méthode par pôles alignés\n");
 A = Mv*Lv^2 + Mr*Lr^2;
 B = (Mv*Lv + Mr*Lr)*g;
 
-p_r = 0.1;
-p_i = 0.1;
+p_r = 10;
+p_i = 10;
 p1 = s+p_r+p_i*1i;
 p2 = s+p_r-p_i*1i;
 poles = p1*p2*(s+p_r);
@@ -216,18 +219,58 @@ fprintf("\tKd: %4.2f\n", Kd_v)
 G2 = feedback(G_a, Kd_v*s);
 G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
 
-% fprintf("\n---- Caratéristiques en BF ----\n");
-% G_bf
-% disp("Pôles: ")
-% disp(pole(G_bf))
-% disp("Gain statique: ")
-% disp(dcgain(G_bf))
-% disp("Zéro: ")
-% disp(zero(G_bf))
+fprintf("\n---- Caratéristiques en BF ----\n");
+G_bf
+disp("Pôles: ")
+disp(pole(G_bf))
+disp("Gain statique: ")
+disp(dcgain(G_bf))
+disp("Zéro: ")
+disp(zero(G_bf))
+
+%% Simplification pôles/zéro
+close all
+clc
+fprintf("Méthode par pôles alignés\n");
+A = Mv*Lv^2 + Mr*Lr^2;
+B = (Mv*Lv + Mr*Lr)*g;
+
+syms Kps Kis Kds
+a = 0.5;
+
+eqn1 = 2*a + Kis/Kps == -(Jr*Kds)/(Jv+Jr+A);
+eqn2 = 2*a^2 + 2*a*Kis/Kps == -(B+Jr*Kps)/(Jv+Jr+A);
+eqn3 = (2*a^2*Kis)/Kps == -(Jr*Kis)/(Jv+Jr+A);
+
+sol = solve([eqn1, eqn2, eqn3], [Kps, Kis, Kds]);
+
+i = 1;
+Kp_v = double(sol.Kps(i));
+Ki_v = double(sol.Kis(i));
+Kd_v = double(sol.Kds(i));
+
+fprintf("---- Gains du vélo ----\n");
+fprintf("\tKp: %4.2f\n", Kp_v)
+fprintf("\tKi: %4.2f\n", Ki_v)
+fprintf("\tKd: %4.2f\n", Kd_v)
+
+G2 = feedback(G_a, Kd_v*s);
+G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
+
+fprintf("\n---- Caratéristiques en BF ----\n");
+G_bf
+disp("Pôles: ")
+disp(pole(G_bf))
+disp("Gain statique: ")
+disp(dcgain(G_bf))
+disp("Zéro: ")
+disp(zero(G_bf))
 
 %% Simulation Vélo, sans moteur.
 clc
 close all
+AngleInitial = 5;
+
 sim("Simulink/Velo_BF")
 dataList = {Theta 'r' 'Angle vélo [deg]'};
             

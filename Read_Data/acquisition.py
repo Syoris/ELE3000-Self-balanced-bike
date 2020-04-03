@@ -23,9 +23,9 @@ class SerialDataClass:
         self.KdM = 0.00
 
 
-        self.KpV = 1399974
-        self.KiV = 3180
-        self.KdV = 19085
+        self.KpV = 1393612
+        self.KiV = 0
+        self.KdV = 12723
 
         self.data = {   "Bike angle": [],
                         "Target speed": [], 
@@ -78,7 +78,7 @@ class SerialDataClass:
         axs[0].set_xlim(xmin=0)
 
         axs[1].plot(x, self.data["Bike angle"], 'g', label="Bike angle [deg]")
-        axs[1].plot(x, self.data["Command"], 'k', label="Command [V]")
+        axs[1].plot(x, self.data["Command"], 'k', label="Commande [V]")
         axs[1].legend()
         axs[1].grid(True, which='both')
 

@@ -6,7 +6,7 @@
 
 //Define
 #define MAX_SPEED 8000.0 //Max motor speed [deg/sec]
-#define MAX_ACCEL 100000.0 //Max motor accell [deg/sec^2]
+#define MAX_ACCEL 25000.0 //Max motor accell [deg/sec^2]
 
 #define CW true
 #define CCW false
