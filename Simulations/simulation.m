@@ -40,8 +40,7 @@ g = 9.81;   %Accélération gravitationnel [m/s^2]
 s = tf('s');
 H = Km/ ( Tau_m*s + 1 ); %phi_dot selon U
 G = (-Jr*s)/( (Jv+Jr+Mv*Lv^2+Mr*Lr^2)*s^2 - (Mv*Lv+Mr*Lr)*g); %Theta(s)/Phi_dot(s)  => Angle du vélo selon vitesse roue inertielle
-G_a = G*s;
-
+G_a = (-Jr)/( (Jv+Jr+Mv*Lv^2+Mr*Lr^2)*s^2 - (Mv*Lv+Mr*Lr)*g); %Theta(s)/Phi_dot_dot(s)  => Angle du vélo selon accel de la roue
 
 %% ----- Contrôleur du moteur -----
 %% Designeur de Matalab
@@ -54,7 +53,7 @@ Ki_m = num_m(2);
 close all
 clc
 
-p = 50;
+p = 100;
 p1 = s+p+p*1i;
 p2 = s+p-p*1i;
 poles = p1*p2;
@@ -69,7 +68,7 @@ fprintf("\tKp: %4.4f\n", Kp_m)
 fprintf("\tKi: %4.4f\n", Ki_m)
 fprintf("\tKd: %4.4f\n", Kd_m)  
 
-ramp = 10000;
+ramp = 35000;
 sim("Simulink/Moteur_BF")
 dataList = {Phi_dot_des 'r' 'Commande [deg/sec]'; 
             Phi_dot 'b' 'Vitesse [deg/s]'};
@@ -159,10 +158,88 @@ disp(zero(G_bf))
 % 
 % plot_func('Moteur en BF', 'Temps (s)', '', dataList, dataOpt);
 
+%% Matlab en accel
+clc 
+close all
+fprintf("Par Matlab\n");
+load C_accel
+
+[num_v, ~] = tfdata(C_accel2, 'v');
+Kp_v = num_v(2);
+Kd_v = num_v(1);
+Ki_v = num_v(3);
+
+fprintf("---- Gains du vélo ----\n");
+fprintf("\tKp: %4.2f\n", Kp_v)
+fprintf("\tKi: %4.2f\n", Ki_v)
+fprintf("\tKd: %4.2f\n", Kd_v)
+
+G2 = feedback(G_a, Kd_v*s);
+G_bf_mt = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
+
+fprintf("\n---- Caratéristiques en BF ----\n");
+G_bf_mt
+disp("Pôles: ")
+disp(pole(G_bf_mt))
+disp("Gain statique: ")
+disp(dcgain(G_bf_mt))
+disp("Zéro: ")
+disp(zero(G_bf_mt))
+
+%% Pôles alignés en accel
+close all
+clc
+fprintf("Méthode par pôles alignés\n");
+A = Mv*Lv^2 + Mr*Lr^2;
+B = (Mv*Lv + Mr*Lr)*g;
+
+p_r = 0.1;
+p_i = 0.1;
+p1 = s+p_r+p_i*1i;
+p2 = s+p_r-p_i*1i;
+poles = p1*p2*(s+p_r);
+
+[num_v, den_v] = tfdata(poles, 'v');
+a_v = num_v(2);
+b_v = num_v(3);
+c_v = num_v(4);
+
+Kp_v = -((Jv+Jr+A)*b_v+B)/Jr;
+Ki_v = -(Jv+Jr+A)*c_v/Jr;
+Kd_v = -(Jv+Jr+A)*a_v/Jr;
+
+fprintf("---- Gains du vélo ----\n");
+fprintf("\tKp: %4.2f\n", Kp_v)
+fprintf("\tKi: %4.2f\n", Ki_v)
+fprintf("\tKd: %4.2f\n", Kd_v)
+
+G2 = feedback(G_a, Kd_v*s);
+G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
+
+% fprintf("\n---- Caratéristiques en BF ----\n");
+% G_bf
+% disp("Pôles: ")
+% disp(pole(G_bf))
+% disp("Gain statique: ")
+% disp(dcgain(G_bf))
+% disp("Zéro: ")
+% disp(zero(G_bf))
+
+%% Simulation Vélo, sans moteur.
+clc
+close all
+sim("Simulink/Velo_BF")
+dataList = {Theta 'r' 'Angle vélo [deg]'};
+            
+dataOpt = {Phi_dot_des 'k' 'Vitesse des [deg/sec]';
+           Phi_dot_dot_des 'b' 'Accel des [deg^2/sec]'};
+
+plot_func('Velo BF', 'Temps (s)', '', dataList, dataOpt);
+
+fprintf("---- Maximum ----\n");
+fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
+fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
 
 
-%%
-Kd = 0.5;
-G2 = -Jr*s/( (Jv+Jr*(1-Kd)+A)*s^2 - B );
-G3 = feedback(G, Kd*s);
+
 

@@ -18,14 +18,14 @@ class SerialDataClass:
         # self.KpM = 0.0672
         # self.KiM = 0.71
         # self.KdM = 0.0034
-        self.KpM = 0.07
-        self.KiM = 3.70
+        self.KpM = 0.15
+        self.KiM = 15
         self.KdM = 0.00
 
 
-        self.KpV = 5250.00
-        self.KiV = 0
-        self.KdV = 250
+        self.KpV = 1399974
+        self.KiV = 3180
+        self.KdV = 19085
 
         self.data = {   "Bike angle": [],
                         "Target speed": [], 
@@ -153,8 +153,9 @@ class SerialDataClass:
             print("Interrupted")
             self.ser.write(endCom.encode())
 
-        self.ser.flushInput()
-        serialData = self.ser.readline().decode('utf-8')
+        # self.ser.flushInput()
+        # serialData = self.ser.readline().decode('utf-8')
+
         while(not (serialData.startswith('!'))):
             serialData = self.ser.readline().decode('utf-8')
         serialData2 = self.ser.readline().decode('utf-8')

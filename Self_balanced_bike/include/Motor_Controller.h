@@ -5,8 +5,8 @@
 #include <PID_C.h>
 
 //Define
-#define MAX_SPEED 8000 //Max motor speed [deg/sec]
-#define MAX_ACCEL 100000 //Max motor accell [deg/sec^2]
+#define MAX_SPEED 8000.0 //Max motor speed [deg/sec]
+#define MAX_ACCEL 100000.0 //Max motor accell [deg/sec^2]
 
 #define CW true
 #define CCW false
@@ -19,13 +19,13 @@
 #define MOTOR_PIN_1 4
 #define MOTOR_PIN_2 3
 
-#define COUNT_PER_TURN 44
+#define COUNT_PER_TURN 44.0
 #define GEARBOX_RATIO 4.4 //23.1
-#define COUNT_TO_ANGLE 360/(GEARBOX_RATIO*COUNT_PER_TURN)
-#define USEC_TO_SEC 1000000
+#define COUNT_TO_ANGLE 360.0/(GEARBOX_RATIO*COUNT_PER_TURN)
+#define USEC_TO_SEC 1000000.0
 
-#define SPEED_INTERVAL 5000 //Interval to measure speed (in uS)
-#define COMPUTE_INTERVAL 5000 //Interval to compute PID for speed control (in uS)
+#define SPEED_INTERVAL 5000.0 //Interval to measure speed (in uS)
+#define COMPUTE_INTERVAL 2500.0 //Interval to compute PID for speed control (in uS)
 
 class FlywheelMotor{
     private:

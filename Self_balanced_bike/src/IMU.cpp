@@ -90,7 +90,7 @@ bool checkConnection(){
     }
 }
 
-void IMU_Compute(float* ypr, int32_t* gyro){
+void IMU_Compute(float* ypr){
     // Wait for MPU interrupt or extra packet(s) available
     if(mpuInterrupt){
         mpuInterrupt = false;
@@ -119,7 +119,6 @@ void IMU_Compute(float* ypr, int32_t* gyro){
 
                 // display Euler angles in degrees
                 mpu.dmpGetQuaternion(&q, fifoBuffer);
-                mpu.dmpGetGyro(gyro, fifoBuffer);
                 mpu.dmpGetGravity(&gravity, &q);
                 mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 

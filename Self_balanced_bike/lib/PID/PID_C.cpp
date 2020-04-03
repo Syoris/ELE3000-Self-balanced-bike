@@ -65,11 +65,13 @@ bool PID::Compute()
       /*Compute all the working error variables*/
       double input = *myInput;
       double error = *mySetpoint - input;
-      double dInput = (input - lastInput);
-      outputSum+= (ki * error);
+      //double dInput = (input - lastInput);
+      double speed = (input-lastInput);
+      outputSum += (ki * error);
+
 
       /*Add Proportional on Measurement, if P_ON_M is specified*/
-      if(!pOnE) outputSum-= kp * dInput;
+      //if(!pOnE) outputSum-= kp * dInput;
 
       if(outputSum > outMax) outputSum= outMax;
       else if(outputSum < outMin) outputSum= outMin;
@@ -80,16 +82,18 @@ bool PID::Compute()
       else output = 0;
 
       /*Compute Rest of PID Output*/
-      output += outputSum - kd * dInput;
+      output += outputSum - kd * speed;
 
-	    if(output > outMax) output = outMax;
+	   //Check output limit
+      if(output > outMax) output = outMax;
       else if(output < outMin) output = outMin;
-	    *myOutput = output;
+	   
+      *myOutput = output;
 
       /*Remember some variables for next time*/
       lastInput = input;
       lastTime = now;
-	    return true;
+	   return true;
    }
    else return false;
 }
@@ -101,7 +105,8 @@ bool PID::Compute()
  ******************************************************************************/
 void PID::SetTunings(double Kp, double Ki, double Kd, int POn)
 {
-   if (Kp<0 || Ki<0 || Kd<0) return;
+   //! Modifié par moi
+   //if (Kp<0 || Ki<0 || Kd<0) return;
 
    pOn = POn;
    pOnE = POn == P_ON_E;

@@ -46,7 +46,7 @@ bool motorOn = false;
 bool followAccel = false;
 bool toStabilise = false;
 
-unsigned int computInt;
+double computInt;
 double speedInc;
 
 Servo servo;
@@ -70,7 +70,6 @@ void setup() {
 
 }
 
-int32_t angSpeed;
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
@@ -81,19 +80,25 @@ void loop() {
     //! Read Serial Input
     if(currentTime - prevTimeCommand > IR_INTERVAL){
         prevTimeCommand = currentTime;
-        // readRemote();
+        //readRemote();
 	    readSerial();
     }
 
     //! To go to a specific acceleration
     if(followAccel){
+        mainController.updateAngle();
         if(currentTime - prevTimeAccel < 1000)
             goToAccel();
         else{
             Serial.println("Timeout");
             followAccel = false;
-            stopController();
             Serial.println("*");
+            stopController();
+
+            Serial.print("Comput int: ");
+            Serial.print(computInt);
+            Serial.print("\tSpeed inc: ");
+            Serial.println(speedInc);
         }
     }
 
@@ -101,13 +106,9 @@ void loop() {
     if(toStabilise)
         mainController.computeCommand();
 
-    mainController.updateAngle();
-    angSpeed = mainController.getAngularSpeed();
-    Serial.print("Angle: ");
-    Serial.print(mainController.getAngle());
-
-    Serial.print("\tAngular speed: ");
-    Serial.println(angSpeed);
+    // mainController.updateAngle();
+    // Serial.print("Angle: ");
+    // Serial.print(mainController.getAngle());
     
 }
 
@@ -204,11 +205,13 @@ void stopController(){
 
 // Fonction de test
 void goToAccel(){
-
+    currentTime = millis();
     if(currentTime - prevTime > computInt){
+        speedInc = goalAccel*(double(currentTime-prevTime)/1000);
         double newSpeed = flywheelMotor.getTargetSpeed() + speedInc;
         flywheelMotor.setTargetSpeed(newSpeed);
         prevTime = currentTime;
+        
         // Serial.print("Goal accel: ");
         // Serial.print(goalAccel);
         // Serial.print("\t Compute int: ");
@@ -269,7 +272,6 @@ void readSerial(){
                 Serial.println(mainController.getKd());
             }
 
-
             // Commandes du moteur
             else if(commande == "On"){ start();}
 
@@ -296,11 +298,13 @@ void readSerial(){
                 Serial.print("Going to [deg/sec^2]: ");
                 Serial.println(accel);
                 goalAccel = accel;
-                computInt = COMPUTE_INTERVAL/1000;
-                speedInc = goalAccel/1000*computInt;
+                // computInt = COMPUTE_INTERVAL/1000;
+                // speedInc = (goalAccel*computInt)/1000;
                 followAccel = true;
-                prevTimeAccel = millis();
                 currentTime = millis();
+                prevTimeAccel = currentTime;
+                prevTime = currentTime;
+
             }
 
             else if(commande.startsWith("setKpM")){

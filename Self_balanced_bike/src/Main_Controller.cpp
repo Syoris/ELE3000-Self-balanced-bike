@@ -20,11 +20,14 @@ MainController::MainController():_anglePID(&_currentAngle, &_accelOutput, &_targ
     flywheelMotor.setBikeAngle(&_currentAngle);
 
     _imuRdy = IMU_Setup();
+
 }
 
 void MainController::startController(){
     _toStabilize = true;
     flywheelMotor.startMotor();
+    _prevComputeTime = millis();
+
 }
 
 void MainController::stopController(){
@@ -42,18 +45,18 @@ void MainController::stopController(){
 void MainController::updateAngle(){
     if (!_imuRdy) return; //Check IMU is working
 
-    IMU_Compute(_ypr, _gyro);
+    IMU_Compute(_ypr);
     _currentAngle = _ypr[1] - 4; // -3 to correct sensor
 }
 
 void MainController::computeCommand(){
-    static unsigned int computInt = COMPUTE_INTERVAL_ANGLE/1000;
     if(_toStabilize){
 
         updateAngle();
+        double currentTime = millis();
 
         if(_anglePID.Compute()){
-            double speedInc = (_accelOutput*computInt)/1000;
+            double speedInc = _accelOutput*(double(currentTime - _prevComputeTime)/1000);
             double newSpeed = flywheelMotor.getTargetSpeed() + speedInc;
             newSpeed =  newSpeed > MAX_SPEED? MAX_SPEED  : newSpeed;
             newSpeed =  newSpeed < -MAX_SPEED? -MAX_SPEED: newSpeed;
@@ -65,10 +68,15 @@ void MainController::computeCommand(){
             // Serial.print("\t Target accel: ");
             // Serial.print(_accelOutput);
             // Serial.print("\t Speed inc: ");
-            // Serial.print(_accelOutput);
-            // Serial.print("\t Target accel: ");
-            // Serial.println(_accelOutput);
+            // Serial.print(speedInc);
+            // Serial.print("\t New speed: ");
+            // Serial.print(newSpeed);
+            // Serial.print("\t Current time: ");
+            // Serial.print(currentTime);
+            // Serial.print("\t Prev time: ");
+            // Serial.println(_prevComputeTime);
 
+            _prevComputeTime = currentTime;
         }
     }
 }
@@ -76,8 +84,6 @@ void MainController::computeCommand(){
 
 //! Interface
 double MainController::getAngle(){return _currentAngle;} 
-
-int32_t MainController::getAngularSpeed(){return _gyro[0];}
 
 double MainController::getTargetAngle(){return _targetAngle;}
 

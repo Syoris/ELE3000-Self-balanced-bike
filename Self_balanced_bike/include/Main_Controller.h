@@ -6,7 +6,7 @@
 #include <IMU.h>
 #include <Motor_Controller.h>
 
-#define COMPUTE_INTERVAL_ANGLE 5000 //Interval to compute PID for speed control (in uS)
+#define COMPUTE_INTERVAL_ANGLE 2500.0 //Interval to compute PID for speed control (in uS)
 
 
 class MainController{
@@ -16,10 +16,10 @@ class MainController{
         double _currentAngle;
         double _targetAngle;
         double _accelOutput;    //Target speed of flywheel
+        double _prevComputeTime;
 
         double _Kp, _Ki, _Kd;
         float _ypr[3];          //[yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
-        int32_t _gyro[3];         //Angular speed
 
         bool _toStabilize = false;
         bool _imuRdy = false;
