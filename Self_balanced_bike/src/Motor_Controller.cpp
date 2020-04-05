@@ -1,8 +1,8 @@
 #include "Motor_Controller.h"
 
-double Kp_m = 5;
+double Kp_m = 0.0032;
 double Ki_m = 0;
-double Kd_m = 0;
+double Kd_m = 0.0001;
 
 // double Kp_m = 0.0672;
 // double Ki_m = 0.7075;
@@ -25,13 +25,14 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
                                 _speedPID(&_speed, &_speedCommand, &_targetSpeed, Kp_m, Ki_m, Kd_m, DIRECT){
     _prevAngle = 0;
     _currentAngle = 0;
+    _targetSpeed = 5000;
 
     _Kp = Kp_m;
     _Kd = Kd_m;
     _Ki = Ki_m;
 
     _speedPID.SetMode(AUTOMATIC);
-    _speedPID.SetOutputLimits(-256, 256);
+    _speedPID.SetOutputLimits(-6, 6);
     _speedPID.SetTunings(_Kp, _Ki, _Kd);
     _speedPID.SetSampleTime(COMPUTE_INTERVAL/1000);
 
@@ -49,6 +50,8 @@ void FlywheelMotor::startMotor(){
     _motor_enc.write(0);
     _prevAngle = 0;
     _currentAngle = 0;
+    _speed = 0;
+    _targetSpeed = 0;
 }
 
 void FlywheelMotor::stopMotor(){
@@ -59,11 +62,11 @@ void FlywheelMotor::stopMotor(){
     delay(50);
 
     Serial.print("!");
-    Serial.print(_speedPID.GetKp());
+    Serial.print(_speedPID.GetKp(), 5);
     Serial.print(", ");
-    Serial.print(_speedPID.GetKi());
+    Serial.print(_speedPID.GetKi(), 5);
     Serial.print(", ");
-    Serial.println(_speedPID.GetKd());
+    Serial.println(_speedPID.GetKd(), 5);
 }
 
 //Return encoder value
@@ -106,14 +109,15 @@ void FlywheelMotor::computeCommand(){
 
     if(_speedPID.Compute()){
         printMotorData();
+        double pwmVal = _speedCommand*V_TO_PWM;
+        bool dir = pwmVal < 0 ? CW : CCW;
 
-        bool dir = _speedCommand < 0 ? CW : CCW;
         if(dir == CCW){
             analogWrite(_pin1, 0);
-            analogWrite(_pin2, abs(_speedCommand));
+            analogWrite(_pin2, abs(pwmVal));
         }
         else{
-            analogWrite(_pin1, abs(_speedCommand));
+            analogWrite(_pin1, abs(pwmVal));
             analogWrite(_pin2, 0);
         }
     }
@@ -121,6 +125,8 @@ void FlywheelMotor::computeCommand(){
 
 void FlywheelMotor::stepReponse(double stepAmplitude){
     double stepTime = 3000; //Time in ms
+
+    _speed = 0;
     _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
     _motor_enc.write(0);
     _currentAngle = 0;
@@ -132,7 +138,7 @@ void FlywheelMotor::stepReponse(double stepAmplitude){
 
     while(currentTime - startingTime < stepTime){
         currentTime = millis();
-        setMotorSpeed(stepAmplitude*255/6, CW);
+        setMotorSpeed(stepAmplitude*255/6, CCW);
         if(currentTime - lastPrint > COMPUTE_INTERVAL/1000){
             printMotorData();
             lastPrint = currentTime;

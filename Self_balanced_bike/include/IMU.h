@@ -4,7 +4,7 @@
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
-#define TO_ANGLE 180/M_PI
+//#define TO_ANGLE 180/M_PI
 
 // MPU control/status vars
 extern MPU6050 mpu;

@@ -25,28 +25,27 @@ MainController::MainController():_anglePID(&_currentAngle, &_accelOutput, &_targ
 
 void MainController::startController(){
     _toStabilize = true;
+    updateAngle();
     flywheelMotor.startMotor();
     _prevComputeTime = millis();
-
 }
 
 void MainController::stopController(){
     _toStabilize = false;
     flywheelMotor.stopMotor();
     Serial.print("!");
-    Serial.print(_anglePID.GetKp());
+    Serial.print(_anglePID.GetKp(), 5);
     Serial.print(", ");
-    Serial.print(_anglePID.GetKi());
+    Serial.print(_anglePID.GetKi(), 5);
     Serial.print(", ");
-    Serial.println(_anglePID.GetKd());
+    Serial.println(_anglePID.GetKd(), 5);
 }
-
 
 void MainController::updateAngle(){
     if (!_imuRdy) return; //Check IMU is working
 
     IMU_Compute(_ypr);
-    _currentAngle = _ypr[1] - 4; // -3 to correct sensor
+    _currentAngle = _ypr[1] - 4*DEG_TO_RAD; // to correct sensor
 }
 
 void MainController::computeCommand(){

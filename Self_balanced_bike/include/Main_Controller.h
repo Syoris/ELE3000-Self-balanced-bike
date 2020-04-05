@@ -7,6 +7,8 @@
 #include <Motor_Controller.h>
 
 #define COMPUTE_INTERVAL_ANGLE 2500.0 //Interval to compute PID for speed control (in uS)
+//#define RAD_TO_DEG 180/M_PI
+//#define DEG_TO_RAD M_PI/180
 
 
 class MainController{

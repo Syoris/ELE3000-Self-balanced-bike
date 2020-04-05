@@ -31,6 +31,7 @@ void IMU_test();
 void goToAccel();
 
 void setServoSpeed(int speed);
+float str2float(String val);
 
 // Variables
 double goalAccel;   //To test motor acceleration
@@ -45,6 +46,7 @@ unsigned long currentTime = 0;
 bool motorOn = false;
 bool followAccel = false;
 bool toStabilise = false;
+bool toCheckAngle = false;
 
 double computInt;
 double speedInc;
@@ -106,9 +108,12 @@ void loop() {
     if(toStabilise)
         mainController.computeCommand();
 
-    // mainController.updateAngle();
-    // Serial.print("Angle: ");
-    // Serial.print(mainController.getAngle());
+    if(toCheckAngle){
+        mainController.updateAngle();
+        Serial.print("#");
+        Serial.println(mainController.getAngle());
+        delay(50);
+    }
     
 }
 
@@ -199,6 +204,7 @@ void stopController(){
     motorOn = false;
     followAccel = false;
     toStabilise = false;
+    toCheckAngle = false;
     goalAccel = 0;
     mainController.stopController();
 }
@@ -225,6 +231,7 @@ void goToAccel(){
 
 void start(){
     motorOn = true;
+    flywheelMotor.setTargetSpeed(0);
     flywheelMotor.startMotor();
 }
 
@@ -249,27 +256,6 @@ void readSerial(){
             if(commande == "stabilize"){
                 toStabilise = true;
                 startController();
-            }
-
-            else if(commande.startsWith("setKpV")){
-                double newKp = commande.substring(7).toFloat();
-                mainController.setKp(newKp);
-                Serial.print("New Kp for bike: ");
-                Serial.println(mainController.getKp());
-            }
-
-            else if(commande.startsWith("setKiV")){
-                double newKi = atof(commande.substring(7).c_str());
-                mainController.setKi(newKi);
-                Serial.print("New Ki for bike: ");
-                Serial.println(mainController.getKi());
-            }
-
-            else if(commande.startsWith("setKdV")){
-                double newKd = atof(commande.substring(7).c_str());
-                mainController.setKd(newKd);
-                Serial.print("New Kd for bike: ");
-                Serial.println(mainController.getKd());
             }
 
             // Commandes du moteur
@@ -307,25 +293,49 @@ void readSerial(){
 
             }
 
+            else if(commande == "checkAngle"){toCheckAngle = true;}
+
+            else if(commande.startsWith("setKpV")){
+                double newKp = commande.substring(7).toFloat();
+                mainController.setKp(newKp);
+                Serial.print("New Kp for bike: ");
+                Serial.println(mainController.getKp(), 5);
+            }
+
+            else if(commande.startsWith("setKiV")){
+                double newKi = atof(commande.substring(7).c_str());
+                mainController.setKi(newKi);
+                Serial.print("New Ki for bike: ");
+                Serial.println(mainController.getKi(), 5);
+            }
+
+            else if(commande.startsWith("setKdV")){
+                double newKd = atof(commande.substring(7).c_str());
+                mainController.setKd(newKd);
+                Serial.print("New Kd for bike: ");
+                Serial.println(mainController.getKd(), 5);
+            }
+
             else if(commande.startsWith("setKpM")){
                 double newKp = atof(commande.substring(7).c_str());
                 flywheelMotor.setKp(newKp);
                 Serial.print("New Kp: ");
-                Serial.println(flywheelMotor.getKp());
+                Serial.println(flywheelMotor.getKp(), 5);
+        
             }
 
             else if(commande.startsWith("setKiM")){
                 double newKi = atof(commande.substring(7).c_str());
                 flywheelMotor.setKi(newKi);
                 Serial.print("New Ki: ");
-                Serial.println(flywheelMotor.getKi());
+                Serial.println(flywheelMotor.getKi(), 5);
             }
 
             else if(commande.startsWith("setKdM")){
                 double newKd = atof(commande.substring(7).c_str());
                 flywheelMotor.setKd(newKd);
                 Serial.print("New Kd: ");
-                Serial.println(flywheelMotor.getKd());
+                Serial.println(flywheelMotor.getKd(), 5);
             }
             
             else

@@ -6,7 +6,7 @@
 
 //Define
 #define MAX_SPEED 8000.0 //Max motor speed [deg/sec]
-#define MAX_ACCEL 25000.0 //Max motor accell [deg/sec^2]
+#define MAX_ACCEL 30000.0 //Max motor accell [deg/sec^2]
 
 #define CW true
 #define CCW false
@@ -23,9 +23,10 @@
 #define GEARBOX_RATIO 4.4 //23.1
 #define COUNT_TO_ANGLE 360.0/(GEARBOX_RATIO*COUNT_PER_TURN)
 #define USEC_TO_SEC 1000000.0
+#define V_TO_PWM 256/6
 
-#define SPEED_INTERVAL 5000.0 //Interval to measure speed (in uS)
-#define COMPUTE_INTERVAL 2500.0 //Interval to compute PID for speed control (in uS)
+#define SPEED_INTERVAL 25000.0 //Interval to measure speed (in uS)
+#define COMPUTE_INTERVAL 25000.0 //Interval to compute PID for speed control (in uS)
 
 class FlywheelMotor{
     private:

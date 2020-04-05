@@ -122,9 +122,9 @@ void IMU_Compute(float* ypr){
                 mpu.dmpGetGravity(&gravity, &q);
                 mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
-                ypr[0] = ypr[0]*TO_ANGLE;
-                ypr[1] = ypr[1]*TO_ANGLE;
-                ypr[2] = ypr[2]*TO_ANGLE;
+                ypr[0] = ypr[0]; //*TO_ANGLE;
+                ypr[1] = ypr[1]; //*TO_ANGLE;
+                ypr[2] = ypr[2]; //*TO_ANGLE;
 
                 if (printData){
                     Serial.print("ypr\t");

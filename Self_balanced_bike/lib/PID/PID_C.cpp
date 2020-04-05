@@ -34,6 +34,7 @@ PID::PID(double* Input, double* Output, double* Setpoint,
     PID::SetTunings(Kp, Ki, Kd, POn);
 
     lastTime = millis()-SampleTime;
+    lastInput = 0;
 }
 
 /*Constructor (...)*********************************************************
@@ -65,8 +66,10 @@ bool PID::Compute()
       /*Compute all the working error variables*/
       double input = *myInput;
       double error = *mySetpoint - input;
-      //double dInput = (input - lastInput);
-      double speed = (input-lastInput);
+      // double dInput = (input - lastInput);
+
+      double derivative = (input-lastInput);
+
       outputSum += (ki * error);
 
 
@@ -82,7 +85,7 @@ bool PID::Compute()
       else output = 0;
 
       /*Compute Rest of PID Output*/
-      output += outputSum - kd * speed;
+      output += outputSum - kd * derivative;
 
 	   //Check output limit
       if(output > outMax) output = outMax;
@@ -93,6 +96,20 @@ bool PID::Compute()
       /*Remember some variables for next time*/
       lastInput = input;
       lastTime = now;
+      
+      // Serial.print("Speed: ");
+      // Serial.print(input);
+      // Serial.print("\tError: ");
+      // Serial.print(error);
+      // Serial.print("\t Accel: ");
+      // Serial.print(derivative);
+      // Serial.print("\t Kp*E: ");
+      // Serial.print(kp * error);
+      // Serial.print("\t Kd*s: ");
+      // Serial.print(kd * derivative);
+      // Serial.print("\t Output: ");
+      // Serial.println(output);
+
 	   return true;
    }
    else return false;
@@ -141,7 +158,7 @@ void PID::SetSampleTime(int NewSampleTime)
    if (NewSampleTime > 0)
    {
       double ratio  = (double)NewSampleTime
-                      / (double)SampleTime;
+                       / (double)SampleTime;
       ki *= ratio;
       kd /= ratio;
       SampleTime = (unsigned long)NewSampleTime;
