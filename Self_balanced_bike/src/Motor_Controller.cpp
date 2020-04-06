@@ -158,7 +158,7 @@ void FlywheelMotor::brakeMotor(){
 void FlywheelMotor::printMotorData(){
     if(!_printTextData){
         Serial.print("#");
-        Serial.print(*_bikeAngle);
+        Serial.print(*_bikeAngle, 5);
         Serial.print(", ");
         Serial.print(_targetSpeed);
         Serial.print(", ");

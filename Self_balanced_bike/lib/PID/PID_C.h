@@ -87,6 +87,7 @@ class PID
 	unsigned long SampleTime;
 	double outMin, outMax;
 	bool inAuto, pOnE;
+  bool toPrint;
 };
 #endif
 

@@ -33,6 +33,7 @@ PID::PID(double* Input, double* Output, double* Setpoint,
     PID::SetControllerDirection(ControllerDirection);
     PID::SetTunings(Kp, Ki, Kd, POn);
 
+    toPrint = false;
     lastTime = millis()-SampleTime;
     lastInput = 0;
 }

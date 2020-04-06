@@ -5,9 +5,7 @@ close all
 %Vélo
 Mv = 331/1000;            %Masse du vélo [kg]
 Lv = 4/100;                  %Distance sol-CM [m]
-Jv_cm = 224468.05/(1000^3);     %Inertie du vélo [Kg*m^2]
-%Jv = Jv_cm + Mv*Lv^2;
-Jv = 0.0003;
+Jv = 224468.05/(1000^3);     %Inertie du vélo [Kg*m^2]
 
 %Roue inertielle
 Mp = 17/1000;         %Masse de la roue en plastique [kg]
@@ -19,10 +17,10 @@ Rm = 32/1000;   %Rayon total du washer [m]
 rm = 14/1000;   %Rayon intérieur du washer [m]
 Jm = Mm/2*(Rm^2 + rm^2);
 
-Mr = 165/1000;  %Masse de la roue [kg]   
-Lr = 9/100;     %Distance sol-CM roue [m]
-%Jr = 2*Jm+Jp;   %Inertie de la roue [Kg*m^2]
-Jr = 0.0001485;
+Mr = 165;
+Lr = 9/100;             %Distance sol-CM roue [m]
+Jr = 2*Jm+Jp;    %Inertie de la roue [Kg*m^2]
+%Jr = 0.0795;
 
 %Moteur
 
@@ -30,15 +28,19 @@ Jr = 0.0001485;
 % Km = 252.5; %Gain statique
 % Tau_m = 0.031;
 
-% M2: 6V avec poids
+% M2: 6V avec poids a
 Km = 1311.7; %Gain statique
 Tau_m = 0.205;
 
+%Autres
+Theta = 0;  %Angle du vélo par rapport à la vertical
+Phi = 0;    %Angle de la roue inertielle
+Tau = 0;    %Couple du moteur
 g = 9.81;   %Accélération gravitationnel [m/s^2]
 
 % Fonctions de transfert
 s = tf('s');
-H = Km/ ( Tau_m*s + 1 ); %phi_dot selon U [deg]
+H = Km/ ( Tau_m*s + 1 ); %phi_dot selon U EN RAD
 
 G = (-Jr*s)/( (Jv+Jr+Mv*Lv^2+Mr*Lr^2)*s^2 - (Mv*Lv+Mr*Lr)*g); %Theta(s)/Phi_dot(s)  => Angle du vélo selon vitesse roue inertielle
 G_a = (-Jr)/( (Jv+Jr+Mv*Lv^2+Mr*Lr^2)*s^2 - (Mv*Lv+Mr*Lr)*g); %Theta(s)/Phi_dot_dot(s)  => Angle du vélo selon accel de la roue
@@ -385,35 +387,33 @@ grid on
 %% ===================
 
 %% ----- Identification -----
-%% Velo BO
+%% Velo BO - Sans accel 
 clc
 close all
-
-% Sans accelération
 load(fullfile("PythonData", 'Velo_BO'))
 simTime = 0.2;
 startVal = 20;
 nVal = 8;
 
-
 AngleInitial = BikeAngle(startVal);
 AccelVal = 0;
 sim("Simulink/Velo_BO")
 
+
 figure
-suptitle("Vélo en BO")
-subplot(1,2, 1)
 hold on
-plot(Time(1:nVal+1), BikeAngle(startVal:startVal+nVal), 'r', 'DisplayName', 'Angle expérimentale')
-plot(Theta_BO(:, 1), Theta_BO(:, 2), 'b', 'DisplayName', 'Angle théorique')
+plot(Time(1:nVal+1), BikeAngle(startVal:startVal+nVal), 'r', 'DisplayName', 'Angle (exp)')
+plot(Theta_BO(:, 1), Theta_BO(:, 2), 'b', 'DisplayName', 'Angle (théo)')
 legend
-title("Sans accélération")
+title("Vélo - Réponse à l'échellon")
 xlabel("Temps (sec)")
 ylabel("Angle [deg]")
 grid on
 hold off
 
-% Avec accélération
+%% Avec Accel
+clc
+close all
 load(fullfile("PythonData", 'Velo_BO_Ramp_20000'))
 endVal = 46;
 simTime = Time(endVal);
@@ -423,26 +423,27 @@ AccelVal = 20000;
 
 sim("Simulink/Velo_BO")
 
-subplot(1, 2, 2)
+figure
+subplot(1, 2, 1)
 hold on
 plot(Time(1:endVal), BikeAngle(1:endVal), 'r', 'DisplayName', 'Angle (exp)')
 plot(Theta_BO(:, 1), Theta_BO(:, 2), 'b', 'DisplayName', 'Angle (théo)')
 legend
-title("Avec accélération")
+title("Vélo BO avec accélération de la roue")
 xlabel("Temps (sec)")
 ylabel("Angle [deg]")
 grid on
 hold off
-% 
-% subplot(1, 2, 2)
-% hold on
-% plot(Time(1:endVal), -CurrentSpeed(1:endVal), 'r', 'DisplayName', 'Vitesse (exp)')
-% plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'b', 'DisplayName', 'Vitesse (des)')
-% legend
-% xlabel("Temps (sec)")
-% ylabel("Vitesse [deg/sec]")
-% grid on
-% hold off
+
+subplot(1, 2, 2)
+hold on
+plot(Time(1:endVal), -CurrentSpeed(1:endVal), 'r', 'DisplayName', 'Vitesse (exp)')
+plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'b', 'DisplayName', 'Vitesse (des)')
+legend
+xlabel("Temps (sec)")
+ylabel("Vitesse [deg/sec]")
+grid on
+hold off
 
 %% Avec Accel et Moteur
 clc
@@ -452,7 +453,7 @@ endVal = 46;
 simTime = Time(endVal);
 
 AngleInitial = BikeAngle(1);
-AccelVal = 2000;
+AccelVal = 20000;
 
 sim("Simulink/Velo_BO_Moteur")
 
@@ -508,18 +509,6 @@ disp(dcgain(G_bf))
 disp("Zéro: ")
 disp(zero(G_bf))
 
-sim("Simulink/Velo_BF")
-dataList = {Theta 'r' 'Angle vélo [deg]'};
-            
-dataOpt = {Phi_dot_des 'k' 'Vitesse des [deg/sec]';
-           Phi_dot_dot_des 'b' 'Accel des [deg^2/sec]'};
-
-plot_func('Velo BF', 'Temps (s)', '', dataList, dataOpt);
-
-fprintf("---- Maximum ----\n");
-fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
-fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
-
 %% Simplification pôles/zéro
 close all
 clc
@@ -529,7 +518,7 @@ B = (Mv*Lv + Mr*Lr)*g;
 
 syms Kps Kis Kds
 
-a = 10;
+a = 1.5;
 
 eqn1 = 2*a + Kis/Kps == -(Jr*Kds)/(Jv+Jr+A);
 eqn2 = 2*a^2 + 2*a*Kis/Kps == -(B+Jr*Kps)/(Jv+Jr+A);
@@ -597,4 +586,10 @@ fprintf("---- Maximum ----\n");
 fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
 fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
 
-
+%%
+hold on
+plot(Theta_1(:, 1), Theta_1(:, 2), 'r', 'DisplayName', '0')
+plot(Theta_2(:, 1), Theta_2(:, 2), 'b', 'DisplayName', '35000')
+legend
+grid on
+hold off

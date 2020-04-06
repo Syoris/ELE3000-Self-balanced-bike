@@ -13,9 +13,9 @@ KpM = 0.003812
 KiM = 0.228711
 KdM = -0.000111
 
-KpV = 1845311
-KiV = 687091
-KdV = 114515
+KpV = 3414.30
+KiV = 3896.63
+KdV = 233.80
 
 class SerialDataClass:
     def __init__(self):
@@ -152,7 +152,7 @@ class SerialDataClass:
                     ser_data[0] = ser_data[0][1:-1]
                     ser_data[-1] = ser_data[-1].rstrip(', \n\r')
                     
-                    self.data["BikeAngle"].append(float(ser_data[0])*180/np.pi) 
+                    self.data["BikeAngle"].append(float(ser_data[0])*180/np.pi) #
                     self.data["TargetSpeed"].append(float(ser_data[1]))    # Target Speed
                     self.data["CurrentSpeed"].append(float(ser_data[2]))    # Current Speed
                     self.data["Command"].append(float(ser_data[3]))  # Command

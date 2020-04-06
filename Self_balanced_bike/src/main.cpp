@@ -88,7 +88,6 @@ void loop() {
 
     //! To go to a specific acceleration
     if(followAccel){
-        mainController.updateAngle();
         if(currentTime - prevTimeAccel < 1000)
             goToAccel();
         else{
@@ -212,6 +211,7 @@ void stopController(){
 // Fonction de test
 void goToAccel(){
     currentTime = millis();
+    mainController.updateAngle();
     if(currentTime - prevTime > computInt){
         speedInc = goalAccel*(double(currentTime-prevTime)/1000);
         double newSpeed = flywheelMotor.getTargetSpeed() + speedInc;
@@ -231,6 +231,11 @@ void goToAccel(){
 
 void start(){
     motorOn = true;
+    delay(50);
+    mainController.updateAngle();
+    delay(100);
+    mainController.updateAngle();
+
     flywheelMotor.setTargetSpeed(0);
     flywheelMotor.startMotor();
 }

@@ -26,6 +26,8 @@ MainController::MainController():_anglePID(&_currentAngle, &_accelOutput, &_targ
 void MainController::startController(){
     _toStabilize = true;
     updateAngle();
+    delay(100);
+    updateAngle();
     flywheelMotor.startMotor();
     _prevComputeTime = millis();
 }
@@ -55,7 +57,7 @@ void MainController::computeCommand(){
         double currentTime = millis();
 
         if(_anglePID.Compute()){
-            double speedInc = _accelOutput*(double(currentTime - _prevComputeTime)/1000);
+            double speedInc = (_accelOutput*RAD_TO_DEG)*(double(currentTime - _prevComputeTime)/1000);
             double newSpeed = flywheelMotor.getTargetSpeed() + speedInc;
             newSpeed =  newSpeed > MAX_SPEED? MAX_SPEED  : newSpeed;
             newSpeed =  newSpeed < -MAX_SPEED? -MAX_SPEED: newSpeed;
