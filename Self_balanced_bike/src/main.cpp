@@ -112,8 +112,7 @@ void loop() {
         Serial.print("#");
         Serial.println(mainController.getAngle());
         delay(50);
-    }
-    
+    }    
 }
 
 
@@ -235,8 +234,6 @@ void start(){
     mainController.updateAngle();
     delay(100);
     mainController.updateAngle();
-
-    flywheelMotor.setTargetSpeed(0);
     flywheelMotor.startMotor();
 }
 
@@ -270,9 +267,9 @@ void readSerial(){
 
             else if(commande.startsWith("setSpeed")){
                 float newSpeed = commande.substring(8).toFloat();              
-                Serial.print("New speed: ");
-                Serial.println(newSpeed);
                 flywheelMotor.setTargetSpeed(newSpeed);
+                Serial.print("New speed: ");
+                Serial.println(flywheelMotor.getTargetSpeed());
             }
 
             else if(commande.startsWith("step")){

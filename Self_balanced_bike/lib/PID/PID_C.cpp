@@ -238,7 +238,11 @@ void PID::SetControllerDirection(int Direction)
    controllerDirection = Direction;
 }
 
-void PID::InitSpeed(){lastInput = *myInput;}
+void PID::InitSpeed()
+{
+   lastInput = *myInput;
+   outputSum = 0;   
+}
 
 /* Status Funcions*************************************************************
  * Just because you set the Kp=-1 doesn't mean it actually happened.  these

@@ -1,8 +1,8 @@
 #include "Main_Controller.h"
 
-double Kp_v = 3414.30;
-double Ki_v = 3896.63;
-double Kd_v = 233.80;
+double Kp_v = -3414.30;
+double Ki_v = -3896.63;
+double Kd_v = -233.80;
 
 MainController mainController;
 
@@ -29,6 +29,8 @@ void MainController::startController(){
     updateAngle();
     delay(100);
     updateAngle();
+    flywheelMotor.setMotorSpeed(0);
+    flywheelMotor.setTargetSpeed(0);
     _anglePID.InitSpeed();
     flywheelMotor.startMotor();
     _prevComputeTime = millis();
@@ -84,7 +86,7 @@ void MainController::computeCommand(){
     }
 }
 
-aa
+
 //! Interface
 double MainController::getAngle(){return _currentAngle;} 
 

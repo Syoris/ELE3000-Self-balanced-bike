@@ -1,12 +1,12 @@
 #include "Motor_Controller.h"
 
-double Kp_m = 0.003812;
-double Ki_m = 0.228711;
-double Kd_m = -0.000111;
+// double Kp_m = 0.003812;
+// double Ki_m = 0.228711;
+// double Kd_m = -0.000111;
 
-// double Kp_m = 0.0672;
-// double Ki_m = 0.7075;
-// double Kd_m = 0.0034;
+double Kp_m = 1;
+double Ki_m = 0;
+double Kd_m = 0;
 
 static void measureSpeedTimer(){
     flywheelMotor.measureSpeed();
@@ -47,11 +47,12 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
 void FlywheelMotor::startMotor(){
     _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
     _speedComputeTimer.begin(computeSpeedTimer, COMPUTE_INTERVAL);
+    _speedPID.InitSpeed();
     _motor_enc.write(0);
     _prevAngle = 0;
     _currentAngle = 0;
     _speed = 0;
-    _targetSpeed = 0;
+    printMotorData();
 }
 
 void FlywheelMotor::stopMotor(){
@@ -104,22 +105,26 @@ void FlywheelMotor::setMotorSpeed(int speed, bool dir){
     }
 }
 
+//Set speed of the motor, speed > 0 => CW
+void FlywheelMotor::setMotorSpeed(int speed){
+    bool dir = speed < 0 ? CCW : CW;
+    if(dir == CCW){
+        analogWrite(_pin1, 0);
+        analogWrite(_pin2, abs(speed));
+    }
+    else{
+        analogWrite(_pin1, abs(speed));
+        analogWrite(_pin2, 0);
+    }
+}
+
 //Set speed of the flywheel with PID, if targetSpeed < 0 => CCW
 void FlywheelMotor::computeCommand(){
 
     if(_speedPID.Compute()){
         printMotorData();
         double pwmVal = _speedCommand*V_TO_PWM;
-        bool dir = pwmVal < 0 ? CW : CCW;
-
-        if(dir == CCW){
-            analogWrite(_pin1, 0);
-            analogWrite(_pin2, abs(pwmVal));
-        }
-        else{
-            analogWrite(_pin1, abs(pwmVal));
-            analogWrite(_pin2, 0);
-        }
+        setMotorSpeed(pwmVal);
     }
 }
 

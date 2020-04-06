@@ -13,8 +13,8 @@
 
 #define DEBUG_MOTOR 0
 
-#define ENC_PIN_1 11
-#define ENC_PIN_2 12
+#define ENC_PIN_1 12
+#define ENC_PIN_2 11
  
 #define MOTOR_PIN_1 4
 #define MOTOR_PIN_2 3
@@ -79,6 +79,7 @@ class FlywheelMotor{
 
         void setTargetSpeed(double targetSpeed);
         void setMotorSpeed(int speed, bool dir);
+        void setMotorSpeed(int speed);
         void setBikeAngle(double* bikeAngle);
         void setKp(double Kp);
         void setKi(double Ki);

@@ -301,6 +301,39 @@ fprintf("\tKp: %4.6f\n", Kp_m)
 fprintf("\tKi: %4.6f\n", Ki_m)
 fprintf("\tKd: %4.6f\n", Kd_m)  
 
+%% PID v2
+close all
+clc
+
+p = 10;
+
+syms Kps Kis
+
+eqn1 = 2*p == (Km*Kps+1)/Tau_m;
+eqn2 = 2*p^2 == (Kis*Km)/Tau_m;
+
+sol = solve([eqn1, eqn2], [Kps, Kis]);
+
+i = 1;
+Kp_m = double(sol.Kps(i));
+Ki_m = double(sol.Kis(i));
+
+H2 = feedback(H, Kp_m);
+H_bf = minreal(feedback(H2*(Ki_m/s), 1));
+
+fprintf("---- Caratéristiques en BF ----\n");
+H_bf
+disp("Pôles: ")
+disp(pole(H_bf))
+disp("Gain statique: ")
+disp(dcgain(H_bf))
+disp("Zéro: ")
+disp(zero(H_bf))
+
+fprintf("\n---- Gains du moteur ----\n");
+fprintf("\tKp: %4.6f\n", Kp_m)
+fprintf("\tKi: %4.6f\n", Ki_m)
+
 %% Réponse à un échellon
 load(fullfile("PythonData", 'PID2_Ramp'))
 simTime = Time(end);
@@ -600,7 +633,7 @@ fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
 %% Comparaison Velo
 clc
 close all
-load(fullfile("PythonData", 'Velo_PID_01'))
+load(fullfile("PythonData", 'Velo_PID_02'))
 simTime = Time(end);
 
 AngleInitial = BikeAngle(1);
@@ -623,7 +656,7 @@ subplot(2, 1, 2)
 hold on
 plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Vitesse expérimentale')
 plot(Time, TargetSpeed, 'k', 'DisplayName', 'Vitesse des (exp)')
-plot(Phi_dot_des_BF(:, 1), -Phi_dot_des_BF(:, 2), 'b', 'DisplayName', 'Vitesse des (théo)')
+plot(Phi_dot_des_BF(:, 1), Phi_dot_des_BF(:, 2), 'b', 'DisplayName', 'Vitesse des (théo)')
 legend
 xlabel("Temps (sec)")
 ylabel("Vitesse [deg/sec]")
