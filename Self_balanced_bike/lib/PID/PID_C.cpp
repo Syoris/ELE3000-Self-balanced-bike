@@ -98,18 +98,22 @@ bool PID::Compute()
       lastInput = input;
       lastTime = now;
       
-      // Serial.print("Speed: ");
-      // Serial.print(input);
-      // Serial.print("\tError: ");
-      // Serial.print(error);
-      // Serial.print("\t Accel: ");
-      // Serial.print(derivative);
-      // Serial.print("\t Kp*E: ");
-      // Serial.print(kp * error);
-      // Serial.print("\t Kd*s: ");
-      // Serial.print(kd * derivative);
-      // Serial.print("\t Output: ");
-      // Serial.println(output);
+      if(toPrint){
+         Serial.print("Theta: ");
+         Serial.print(input, 5);
+         Serial.print("\tError: ");
+         Serial.print(error, 5);
+         Serial.print("\t Theta': ");
+         Serial.print(derivative, 5);
+         Serial.print("\t Kp*E: ");
+         Serial.print(kp * error);
+         Serial.print("\t Kd*s: ");
+         Serial.print(kd * derivative);
+         Serial.print("\t Ki/s: ");
+         Serial.print(outputSum);
+         Serial.print("\t Target Accel: ");
+         Serial.println(output);
+      }
 
 	   return true;
    }
@@ -233,6 +237,8 @@ void PID::SetControllerDirection(int Direction)
    }
    controllerDirection = Direction;
 }
+
+void PID::InitSpeed(){lastInput = *myInput;}
 
 /* Status Funcions*************************************************************
  * Just because you set the Kp=-1 doesn't mean it actually happened.  these

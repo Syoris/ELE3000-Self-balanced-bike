@@ -508,6 +508,7 @@ disp(dcgain(G_bf))
 disp("Zéro: ")
 disp(zero(G_bf))
 
+AngleInitial = 11;
 sim("Simulink/Velo_BF")
 dataList = {Theta 'r' 'Angle vélo [deg]'};
             
@@ -578,7 +579,6 @@ fprintf("---- Maximum ----\n");
 fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
 fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
 
-
 %% Simulation Vélo complet
 clc
 close all
@@ -596,5 +596,39 @@ plot_func('Velo BF', 'Temps (s)', '', dataList, dataOpt);
 fprintf("---- Maximum ----\n");
 fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
 fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
+
+%% Comparaison Velo
+clc
+close all
+load(fullfile("PythonData", 'Velo_PID_01'))
+simTime = Time(end);
+
+AngleInitial = BikeAngle(1);
+AccelVal = 0;
+sim("Simulink/Velo_BF")
+
+figure
+suptitle("Vélo en BF")
+subplot(2, 1, 1)
+hold on
+plot(Time, BikeAngle, 'r', 'DisplayName', 'Angle expérimentale')
+plot(Theta_BF(:, 1), Theta_BF(:, 2), 'b', 'DisplayName', 'Angle théorique')
+legend
+xlabel("Temps (sec)")
+ylabel("Angle [deg]")
+grid on
+hold off
+
+subplot(2, 1, 2)
+hold on
+plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Vitesse expérimentale')
+plot(Time, TargetSpeed, 'k', 'DisplayName', 'Vitesse des (exp)')
+plot(Phi_dot_des_BF(:, 1), -Phi_dot_des_BF(:, 2), 'b', 'DisplayName', 'Vitesse des (théo)')
+legend
+xlabel("Temps (sec)")
+ylabel("Vitesse [deg/sec]")
+grid on
+hold off
+
 
 

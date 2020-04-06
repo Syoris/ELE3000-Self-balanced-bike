@@ -13,9 +13,9 @@ KpM = 0.003812
 KiM = 0.228711
 KdM = -0.000111
 
-KpV = 3414.30
-KiV = 3896.63
-KdV = 233.80
+KpV = -3414.30
+KiV = -3896.63
+KdV = -233.80
 
 class SerialDataClass:
     def __init__(self):

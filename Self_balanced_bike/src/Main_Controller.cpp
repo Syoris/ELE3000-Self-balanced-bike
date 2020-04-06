@@ -1,8 +1,8 @@
 #include "Main_Controller.h"
 
-double Kp_v = 1000;
-double Ki_v = 0;
-double Kd_v = 100;
+double Kp_v = 3414.30;
+double Ki_v = 3896.63;
+double Kd_v = 233.80;
 
 MainController mainController;
 
@@ -16,6 +16,7 @@ MainController::MainController():_anglePID(&_currentAngle, &_accelOutput, &_targ
     _anglePID.SetOutputLimits(-MAX_ACCEL, MAX_ACCEL);
     _anglePID.SetTunings(_Kp, _Ki, _Kd);
     _anglePID.SetSampleTime(COMPUTE_INTERVAL_ANGLE/1000);
+    _anglePID.toPrint = false;
 
     flywheelMotor.setBikeAngle(&_currentAngle);
 
@@ -28,6 +29,7 @@ void MainController::startController(){
     updateAngle();
     delay(100);
     updateAngle();
+    _anglePID.InitSpeed();
     flywheelMotor.startMotor();
     _prevComputeTime = millis();
 }
@@ -82,7 +84,7 @@ void MainController::computeCommand(){
     }
 }
 
-
+aa
 //! Interface
 double MainController::getAngle(){return _currentAngle;} 
 

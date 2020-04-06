@@ -1,8 +1,8 @@
 #include "Motor_Controller.h"
 
-double Kp_m = 0.0032;
-double Ki_m = 0;
-double Kd_m = 0.0001;
+double Kp_m = 0.003812;
+double Ki_m = 0.228711;
+double Kd_m = -0.000111;
 
 // double Kp_m = 0.0672;
 // double Ki_m = 0.7075;

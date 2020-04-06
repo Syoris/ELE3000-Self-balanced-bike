@@ -258,7 +258,7 @@ void readSerial(){
 			Serial.println(commande);
 
             // Commandes du vélo
-            if(commande == "stabilize"){
+            if(commande == "stabilize" || commande == "s"){
                 toStabilise = true;
                 startController();
             }
@@ -266,7 +266,7 @@ void readSerial(){
             // Commandes du moteur
             else if(commande == "On"){ start();}
 
-            else if(commande == "Off"){stopController();}
+            else if(commande == "Off" or commande == "O"){stopController();}
 
             else if(commande.startsWith("setSpeed")){
                 float newSpeed = commande.substring(8).toFloat();              
