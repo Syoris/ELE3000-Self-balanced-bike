@@ -9,13 +9,13 @@ import scipy.io
 
 serPort = "COM3"
 
-KpM = 0.003812
-KiM = 0.228711
-KdM = -0.000111
+KpM = 0.007052  
+KiM = 0.195357
+KdM = 0
 
-KpV = -3414.30
-KiV = -3896.63
-KdV = -233.80
+KpV = -2634.969024
+KiV = 0
+KdV = -155.865320
 
 class SerialDataClass:
     def __init__(self):

@@ -34,6 +34,7 @@ PID::PID(double* Input, double* Output, double* Setpoint,
     PID::SetTunings(Kp, Ki, Kd, POn);
 
     toPrint = false;
+    inNormal = true;
     lastTime = millis()-SampleTime;
     lastInput = 0;
 }
@@ -64,34 +65,37 @@ bool PID::Compute()
    unsigned long timeChange = (now - lastTime);
    if(timeChange>=SampleTime)
    {
-      /*Compute all the working error variables*/
       double input = *myInput;
       double error = *mySetpoint - input;
-      // double dInput = (input - lastInput);
+      double output;
+      double derivative;
 
-      double derivative = (input-lastInput);
+      if(inNormal){
+         /*Compute all the working error variables*/
+         derivative = (input-lastInput);
+         outputSum += (ki * error);
 
-      outputSum += (ki * error);
+         if(outputSum > outMax) outputSum= outMax;
+         else if(outputSum < outMin) outputSum= outMin;
 
+         /*Add Proportional on Error, if P_ON_E is specified*/
+         if(pOnE) output = kp * error;
+         else output = 0;
 
-      /*Add Proportional on Measurement, if P_ON_M is specified*/
-      //if(!pOnE) outputSum-= kp * dInput;
+         /*Compute Rest of PID Output*/
+         output += outputSum - kd * derivative;
 
-      if(outputSum > outMax) outputSum= outMax;
-      else if(outputSum < outMin) outputSum= outMin;
+      }
+      else{
+         outputSum += (ki * error);
+         output = outputSum - kp * input;
 
-      /*Add Proportional on Error, if P_ON_E is specified*/
-	   double output;
-      if(pOnE) output = kp * error;
-      else output = 0;
+      }
 
-      /*Compute Rest of PID Output*/
-      output += outputSum - kd * derivative;
-
-	   //Check output limit
+      //Check output limit
       if(output > outMax) output = outMax;
-      else if(output < outMin) output = outMin;
-	   
+      else if(output < outMin) output = outMin;  
+      
       *myOutput = output;
 
       /*Remember some variables for next time*/
@@ -99,20 +103,31 @@ bool PID::Compute()
       lastTime = now;
       
       if(toPrint){
-         Serial.print("Theta: ");
-         Serial.print(input, 5);
+         Serial.print("Speed: ");
+         Serial.print(input);
          Serial.print("\tError: ");
-         Serial.print(error, 5);
-         Serial.print("\t Theta': ");
-         Serial.print(derivative, 5);
-         Serial.print("\t Kp*E: ");
-         Serial.print(kp * error);
-         Serial.print("\t Kd*s: ");
-         Serial.print(kd * derivative);
-         Serial.print("\t Ki/s: ");
+         Serial.print(error);
+         Serial.print("\t OutputSum: ");
          Serial.print(outputSum);
-         Serial.print("\t Target Accel: ");
+         Serial.print("\t -Kp*speed: ");
+         Serial.print(-kp * input);
+         Serial.print("\t Tension: ");
          Serial.println(output);
+
+         // Serial.print("Theta: ");
+         // Serial.print(input, 5);
+         // Serial.print("\tError: ");
+         // Serial.print(error, 5);
+         // Serial.print("\t Theta': ");
+         // Serial.print(derivative, 5);
+         // Serial.print("\t Kp*E: ");
+         // Serial.print(kp * error);
+         // Serial.print("\t Kd*s: ");
+         // Serial.print(kd * derivative);
+         // Serial.print("\t Ki/s: ");
+         // Serial.print(outputSum);
+         // Serial.print("\t Target Accel: ");
+         // Serial.println(output);
       }
 
 	   return true;
@@ -208,6 +223,8 @@ void PID::SetMode(int Mode)
     }
     inAuto = newAuto;
 }
+
+void PID::SetComputeMode(bool newMode){ inNormal = newMode;}
 
 /* Initialize()****************************************************************
  *	does all the things that need to happen to ensure a bumpless transfer

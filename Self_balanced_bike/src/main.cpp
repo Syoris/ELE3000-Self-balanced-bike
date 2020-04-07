@@ -88,7 +88,7 @@ void loop() {
 
     //! To go to a specific acceleration
     if(followAccel){
-        if(currentTime - prevTimeAccel < 1000)
+        if(currentTime - prevTimeAccel < 1500)
             goToAccel();
         else{
             Serial.println("Timeout");
@@ -281,8 +281,8 @@ void readSerial(){
 
             else if(commande.startsWith("ramp")){
                 float accel = commande.substring(5).toFloat();
-                start();
                 flywheelMotor.setTargetSpeed(0);
+                start();
                 Serial.print("Going to [deg/sec^2]: ");
                 Serial.println(accel);
                 goalAccel = accel;

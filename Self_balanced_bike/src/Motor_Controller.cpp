@@ -4,8 +4,8 @@
 // double Ki_m = 0.228711;
 // double Kd_m = -0.000111;
 
-double Kp_m = 1;
-double Ki_m = 0;
+double Kp_m = 0.002363;
+double Ki_m = 0.031257;
 double Kd_m = 0;
 
 static void measureSpeedTimer(){
@@ -35,6 +35,8 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
     _speedPID.SetOutputLimits(-6, 6);
     _speedPID.SetTunings(_Kp, _Ki, _Kd);
     _speedPID.SetSampleTime(COMPUTE_INTERVAL/1000);
+    _speedPID.SetComputeMode(false);
+    _speedPID.toPrint = false;   //For debugging
 
     _speedMeasureTimer.priority(255);
     _speedComputeTimer.priority(254);

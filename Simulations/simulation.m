@@ -264,7 +264,7 @@ dataOpt = {U 'k' 'Tension [V]'};
 
 plot_func('Moteur en BF', 'Temps (s)', '', dataList);
 
-%% PID 2 - Contrôleur choisi
+%% PID 2
 close all
 clc
 
@@ -301,11 +301,14 @@ fprintf("\tKp: %4.6f\n", Kp_m)
 fprintf("\tKi: %4.6f\n", Ki_m)
 fprintf("\tKd: %4.6f\n", Kd_m)  
 
-%% PID v2
+%% PID v2 - Contrôleur choisi
 close all
 clc
 
-p = 10;
+% C1: p = 10
+% C2: p = 25
+
+p = 25;
 
 syms Kps Kis
 
@@ -317,6 +320,7 @@ sol = solve([eqn1, eqn2], [Kps, Kis]);
 i = 1;
 Kp_m = double(sol.Kps(i));
 Ki_m = double(sol.Kis(i));
+Kd_m = 0;
 
 H2 = feedback(H, Kp_m);
 H_bf = minreal(feedback(H2*(Ki_m/s), 1));
@@ -329,17 +333,22 @@ disp("Gain statique: ")
 disp(dcgain(H_bf))
 disp("Zéro: ")
 disp(zero(H_bf))
+disp("Temps de réponse (2%): ")
+disp(4/p);
+disp("Erreur: ")
+disp(1/(Kp_m*Km+1));
 
 fprintf("\n---- Gains du moteur ----\n");
 fprintf("\tKp: %4.6f\n", Kp_m)
 fprintf("\tKi: %4.6f\n", Ki_m)
 
+
 %% Réponse à un échellon
-load(fullfile("PythonData", 'PID2_Ramp'))
+load(fullfile("PythonData", 'Moteur_BF_C2_S_5000'))
 simTime = Time(end);
 targetAccel = 20000;
 targetSpeed = 5000;
-sim("Simulink/Moteur_BF")
+sim("Simulink/Moteur_BF_v2")
 
 figure
 suptitle("PID")
@@ -367,49 +376,40 @@ grid on
 hold off
 
 %% Réponse à une Rampe
-load(fullfile("PythonData", 'PID_01_Ramp_25000'))
-simTime = Time(20);
-targetAccel = 25000;
-targetSpeed = 5000;
-sim("Simulink/Moteur_BF")
+clc
+close all
 
-% figure
-% suptitle("PID")
-% subplot(1, 2, 1)
-% hold on
-% plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Expérimental')
-% plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Théorique')
-% % plot(Time, TargetSpeed, 'k', 'DisplayName', 'Target Speed (exp)')
-% plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'k', 'DisplayName', 'Target speed')
-% legend
-% title("Vitesse")
-% xlabel("Temps (sec)")
-% ylabel("Vitesse [deg/sec]")
-% grid on
-% hold off
-% 
-% subplot(1, 2, 2)
-% hold on
-% plot(Time, Command, 'r', 'DisplayName', 'Expérimental')
-% plot(U(:, 1), U(:, 2), 'b', 'DisplayName', 'Théorique')
-% legend
-% title("Tension")
-% xlabel("Temps (sec)")
-% ylabel("Tension [V]")
-% grid on
-% hold off
+load(fullfile("PythonData", 'Moteur_BF_C2_A_20000'))
+simTime = Time(end);
+targetAccel = 20000;
+targetSpeed = 8000;
+sim("Simulink/Moteur_BF_v2")
 
 figure
+suptitle("PID")
+subplot(1, 2, 1)
 hold on
-plot(Time(1: 20), CurrentSpeed(1:20), 'r', 'DisplayName', 'Réponse Expérimental')
-plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Réponse Théorique')
-% plot(Time, TargetSpeed, 'k', 'DisplayName', 'Target Speed (exp)')
-plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'k', 'DisplayName', 'Vitesse désirée')
+plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Expérimental')
+% plot(Time, TargetSpeed, 'k', 'DisplayName', 'Target Speed')
+plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Théorique')
+plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'k', 'DisplayName', 'Vitesse désiré')
 legend
-title("Moteur en BF")
+title("Vitesse")
 xlabel("Temps (sec)")
 ylabel("Vitesse [deg/sec]")
 grid on
+hold off
+
+subplot(1, 2, 2)
+hold on
+plot(Time, Command, 'r', 'DisplayName', 'Expérimental')
+plot(U(:, 1), U(:, 2), 'b', 'DisplayName', 'Théorique')
+legend
+title("Tension")
+xlabel("Temps (sec)")
+ylabel("Tension [V]")
+grid on
+hold off
 
 
 
@@ -452,7 +452,7 @@ endVal = 46;
 simTime = Time(endVal);
 
 AngleInitial = BikeAngle(1);
-AccelVal = 20000;
+AccelVal = -20000;
 
 sim("Simulink/Velo_BO")
 
@@ -462,39 +462,6 @@ plot(Time(1:endVal), BikeAngle(1:endVal), 'r', 'DisplayName', 'Angle (exp)')
 plot(Theta_BO(:, 1), Theta_BO(:, 2), 'b', 'DisplayName', 'Angle (théo)')
 legend
 title("Avec accélération")
-xlabel("Temps (sec)")
-ylabel("Angle [deg]")
-grid on
-hold off
-% 
-% subplot(1, 2, 2)
-% hold on
-% plot(Time(1:endVal), -CurrentSpeed(1:endVal), 'r', 'DisplayName', 'Vitesse (exp)')
-% plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'b', 'DisplayName', 'Vitesse (des)')
-% legend
-% xlabel("Temps (sec)")
-% ylabel("Vitesse [deg/sec]")
-% grid on
-% hold off
-
-%% Avec Accel et Moteur
-clc
-close all
-load(fullfile("PythonData", 'Velo_BO_Ramp_20000'))
-endVal = 46;
-simTime = Time(endVal);
-
-AngleInitial = BikeAngle(1);
-AccelVal = 2000;
-
-sim("Simulink/Velo_BO_Moteur")
-
-figure
-hold on
-plot(Time(1:endVal), BikeAngle(1:endVal), 'r', 'DisplayName', 'Angle (exp)')
-plot(Theta_BO(:, 1), Theta_BO(:, 2), 'b', 'DisplayName', 'Angle (théo)')
-legend
-title("Vélo BO avec accélération de la roue")
 xlabel("Temps (sec)")
 ylabel("Angle [deg]")
 grid on
@@ -541,19 +508,6 @@ disp(dcgain(G_bf))
 disp("Zéro: ")
 disp(zero(G_bf))
 
-AngleInitial = 11;
-sim("Simulink/Velo_BF")
-dataList = {Theta 'r' 'Angle vélo [deg]'};
-            
-dataOpt = {Phi_dot_des 'k' 'Vitesse des [deg/sec]';
-           Phi_dot_dot_des 'b' 'Accel des [deg^2/sec]'};
-
-plot_func('Velo BF', 'Temps (s)', '', dataList, dataOpt);
-
-fprintf("---- Maximum ----\n");
-fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
-fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
-
 %% Simplification pôles/zéro
 close all
 clc
@@ -593,75 +547,135 @@ disp(dcgain(G_bf))
 disp("Zéro: ")
 disp(zero(G_bf))
 
+%% PD
+close all
+clc
+A = Mv*Lv^2 + Mr*Lr^2;
+B = (Mv*Lv + Mr*Lr)*g;
+
+% C1: p =
+% C2: p =
+
+p = 5;
+
+syms Kps Kds
+
+eqn1 = 2*p == -(Kds*Jr)/(Jr+Jv+A);
+eqn2 = 2*p^2 == -(B+Kps*Jr)/(Jr+Jv+A);
+
+sol = solve([eqn1, eqn2], [Kps, Kds]);
+
+i = 1;
+Kp_v = double(sol.Kps(i));
+Kd_v = double(sol.Kds(i));
+Ki_v = 0;
+
+G2 = feedback(G_a, Kd_v*s);
+G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
+
+fprintf("---- Caratéristiques en BF ----\n");
+G_bf
+disp("Pôles: ")
+disp(pole(G_bf))
+disp("Gain statique: ")
+disp(dcgain(G_bf))
+disp("Zéro: ")
+disp(zero(G_bf))
+disp("Temps de réponse (2%): ")
+disp(4/p);
+
+fprintf("\n---- Gains du vélo ----\n");
+fprintf("\tKp: %4.6f\n", Kp_v)
+fprintf("\tKd: %4.6f\n", Kd_v)
+
 
 %% Simulation Vélo, sans moteur
 clc
 close all
-AngleInitial = 5;
-simTime = 7;
+AngleInitial = -13;
+simTime = 0.6;
 
 sim("Simulink/Velo_BF")
-dataList = {Theta 'r' 'Angle vélo [deg]'};
-            
-dataOpt = {Phi_dot_des 'k' 'Vitesse des [deg/sec]';
-           Phi_dot_dot_des 'b' 'Accel des [deg^2/sec]'};
 
-plot_func('Velo BF', 'Temps (s)', '', dataList, dataOpt);
-
-fprintf("---- Maximum ----\n");
-fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
-fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
-
-%% Simulation Vélo complet
-clc
-close all
-AngleInitial = 5;
-simTime = 7;
-
-sim("Simulink/Velo_Complet_BF")
-dataList = {Theta 'r' 'Angle vélo [deg]'};
-            
-dataOpt = {Phi_dot_des 'k' 'Vitesse des [deg/sec]';
-           Phi_dot_dot_des 'b' 'Accel des [deg^2/sec]'};
-
-plot_func('Velo BF', 'Temps (s)', '', dataList, dataOpt);
-
-fprintf("---- Maximum ----\n");
-fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
-fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
-
-%% Comparaison Velo
-clc
-close all
-load(fullfile("PythonData", 'Velo_PID_02'))
-simTime = Time(end);
-
-AngleInitial = BikeAngle(1);
-AccelVal = 0;
-sim("Simulink/Velo_BF")
-
+% Plot results
 figure
-suptitle("Vélo en BF")
-subplot(2, 1, 1)
+suptitle("Vélo Complet")
+% Angle
+subplot(1, 2, 1)
 hold on
-plot(Time, BikeAngle, 'r', 'DisplayName', 'Angle expérimentale')
-plot(Theta_BF(:, 1), Theta_BF(:, 2), 'b', 'DisplayName', 'Angle théorique')
+plot(Theta_BF_nm(:, 1), Theta_BF_nm(:, 2), 'b', 'DisplayName', 'Angle')
 legend
+title("Position")
 xlabel("Temps (sec)")
 ylabel("Angle [deg]")
 grid on
 hold off
 
-subplot(2, 1, 2)
+% Vitesse
+subplot(1, 2, 2)
 hold on
-plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Vitesse expérimentale')
-plot(Time, TargetSpeed, 'k', 'DisplayName', 'Vitesse des (exp)')
-plot(Phi_dot_des_BF(:, 1), Phi_dot_des_BF(:, 2), 'b', 'DisplayName', 'Vitesse des (théo)')
+plot(Phi_dot_des_nm(:, 1), Phi_dot_des_nm(:, 2), 'b--', 'DisplayName', 'Vitesse requise')
 legend
+title("Vitesse")
 xlabel("Temps (sec)")
-ylabel("Vitesse [deg/sec]")
+ylabel("Vitessse [deg/sec]")
 grid on
 hold off
+
+
+fprintf("---- Maximum ----\n");
+fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
+fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
+
+
+%% Simulation Vélo complet
+clc
+% close all
+load(fullfile("PythonData", 'Velo_PD_01'))
+simTime = 0.6; %Time(end);
+AngleInitial = BikeAngle(1);
+
+sim("Simulink/Velo_Complet_BF")
+
+% Plot results
+figure
+suptitle("Vélo Complet")
+% Angle
+subplot(1, 2, 1)
+hold on
+%   Exp data
+plot(Time, BikeAngle, 'r', 'DisplayName', 'Expérimental')
+%   Théo data
+plot(Theta_BF(:, 1), Theta_BF(:, 2), 'b', 'DisplayName', 'Théorique')
+plot(Theta_BF_nm(:, 1), Theta_BF_nm(:, 2), 'k', 'DisplayName', 'Théorique')
+legend
+title("Position")
+xlabel("Temps (sec)")
+ylabel("Angle [deg]")
+grid on
+hold off
+
+% Vitesse
+subplot(1, 2, 2)
+hold on
+%   Exp data
+plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Vitesse (exp)')
+plot(Time, TargetSpeed, 'r--', 'DisplayName', 'Vitesse désirée (ex)')
+%   Theo Data
+plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Vitesse actuelle (theo)')
+plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'b--', 'DisplayName', 'Vitesse désirée (theo)')
+plot(Phi_dot_des_nm(:, 1), Phi_dot_des_nm(:, 2), 'k--', 'DisplayName', 'Vitesse désirée (theo)')
+legend
+title("Vitesse")
+xlabel("Temps (sec)")
+ylabel("Vitessse [deg/sec]")
+grid on
+hold off
+
+
+fprintf("---- Maximum ----\n");
+fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(Phi_dot_des(:, 2)))
+fprintf("\tAccel max [deg/sec]: %6.2f\n", max(Phi_dot_dot_des(:, 2)))
 
 
 

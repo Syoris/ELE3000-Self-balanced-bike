@@ -63,6 +63,7 @@ class PID
     int GetDirection();					  //
 
     void InitSpeed();   //To lastInput to current angle
+    void SetComputeMode(bool newMode); //To change computing mode: true: Normal, false: Moteur speed
     bool toPrint;
     
 
@@ -91,6 +92,7 @@ class PID
     unsigned long SampleTime;
     double outMin, outMax;
 	  bool inAuto, pOnE;
+    bool inNormal;
 
  
 };
