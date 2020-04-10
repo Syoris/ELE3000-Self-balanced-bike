@@ -20,7 +20,7 @@ VectorFloat gravity;    // [x, y, z]            gravity vector
 
 volatile bool mpuInterrupt;     // indicates whether MPU interrupt pin has gone high
 bool waitForCmd = false;    // To wait for a character sent before starting
-bool printData = false;  // Print data to debug
+bool printData = true;  // Print data to debug
 
 
 // ================================================================
@@ -54,6 +54,13 @@ bool IMU_Setup(){
     // load and configure the DMP
     Serial.println(F("Initializing DMP..."));
     devStatus = mpu.dmpInitialize();
+
+    mpu.setXAccelOffset(-1443);
+    mpu.setYAccelOffset(805);
+    mpu.setZAccelOffset(1285);
+    mpu.setXGyroOffset(54);
+    mpu.setXGyroOffset(-17);
+    mpu.setXGyroOffset(33);
 
     // make sure it worked (returns 0 if so)
     return checkConnection();
@@ -90,6 +97,11 @@ bool checkConnection(){
     }
 }
 
+unsigned int prevTimeAng = 0;
+float prevAngle = 0;
+int32_t gyro[3];
+
+
 void IMU_Compute(float* ypr){
     // Wait for MPU interrupt or extra packet(s) available
     if(mpuInterrupt){
@@ -120,20 +132,43 @@ void IMU_Compute(float* ypr){
                 // display Euler angles in degrees
                 mpu.dmpGetQuaternion(&q, fifoBuffer);
                 mpu.dmpGetGravity(&gravity, &q);
+                // mpu.dmpGetGyro(gyro, fifoBuffer);
                 mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
 
                 ypr[0] = ypr[0]; //*TO_ANGLE;
                 ypr[1] = ypr[1]; //*TO_ANGLE;
                 ypr[2] = ypr[2]; //*TO_ANGLE;
 
-                if (printData){
-                    Serial.print("ypr\t");
-                    Serial.print(ypr[0]);
-                    Serial.print("\t");
-                    Serial.print(ypr[1]);
-                    Serial.print("\t");
-                    Serial.println(ypr[2]);
-                }
+
+                // unsigned int curTime = millis();
+                
+                // if(curTime - prevTimeAng > 10){
+                //     int16_t gyro = mpu.getRotationZ();
+
+                //     float curAngle = ypr[1]*RAD_TO_DEG;
+                //     // Test Angular velocity
+
+                //     double angVelNum = (curAngle - prevAngle)/(curTime-prevTimeAng)*1000;
+
+                    
+                //     if (printData){
+                //         Serial.print("Time: ");
+                //         Serial.print(curTime);
+                //         Serial.print("\tPrev time: ");
+                //         Serial.print(prevTimeAng);
+                //         Serial.print("\tAngle (deg): ");
+                //         Serial.print(curAngle);
+                //         Serial.print("\tAng Vel (num): ");
+                //         Serial.print(angVelNum);
+                //         Serial.print("\tGyro Y: ");
+                //         Serial.print(gyro);
+                //         Serial.print("\tratio: ");
+                //         Serial.println(gyro/angVelNum);
+                //     }
+                //     prevAngle = curAngle;
+                //     prevTimeAng = curTime;
+                // }
+
             }
         }
     } 

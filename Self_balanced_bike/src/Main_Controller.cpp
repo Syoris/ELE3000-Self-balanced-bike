@@ -1,8 +1,8 @@
 #include "Main_Controller.h"
 
-double Kp_v = -3414.30;
-double Ki_v = -3896.63;
-double Kd_v = -233.80;
+double Kp_v = -5417;
+double Ki_v = -0;
+double Kd_v = -385;
 
 MainController mainController;
 
@@ -16,6 +16,7 @@ MainController::MainController():_anglePID(&_currentAngle, &_accelOutput, &_targ
     _anglePID.SetOutputLimits(-MAX_ACCEL, MAX_ACCEL);
     _anglePID.SetTunings(_Kp, _Ki, _Kd);
     _anglePID.SetSampleTime(COMPUTE_INTERVAL_ANGLE/1000);
+    _anglePID.SetComputeMode(true);
     _anglePID.toPrint = false;
 
     flywheelMotor.setBikeAngle(&_currentAngle);
@@ -34,6 +35,7 @@ void MainController::startController(){
     _anglePID.InitSpeed();
     flywheelMotor.startMotor();
     _prevComputeTime = millis();
+    _prevAngle = _currentAngle;
 }
 
 void MainController::stopController(){
@@ -51,7 +53,7 @@ void MainController::updateAngle(){
     if (!_imuRdy) return; //Check IMU is working
 
     IMU_Compute(_ypr);
-    _currentAngle = _ypr[1] - 4*DEG_TO_RAD; // to correct sensor
+    _currentAngle = _ypr[1] ;//+ 1.4*DEG_TO_RAD; // to correct sensor
 }
 
 void MainController::computeCommand(){
@@ -61,7 +63,10 @@ void MainController::computeCommand(){
         double currentTime = millis();
 
         if(_anglePID.Compute()){
-            double speedInc = (_accelOutput*RAD_TO_DEG)*(double(currentTime - _prevComputeTime)/1000);
+            double timeChange = double(currentTime - _prevComputeTime)/1000; //Time change in seconds
+            _angVel = (_currentAngle - _prevAngle)/timeChange;
+
+            double speedInc = (_accelOutput*RAD_TO_DEG)*timeChange;
             double newSpeed = flywheelMotor.getTargetSpeed() + speedInc;
             newSpeed =  newSpeed > MAX_SPEED? MAX_SPEED  : newSpeed;
             newSpeed =  newSpeed < -MAX_SPEED? -MAX_SPEED: newSpeed;
@@ -82,8 +87,13 @@ void MainController::computeCommand(){
             // Serial.println(_prevComputeTime);
 
             _prevComputeTime = currentTime;
+            _prevAngle = _currentAngle;
         }
     }
+}
+
+void MainController::measureAngVel(){
+
 }
 
 
@@ -91,6 +101,8 @@ void MainController::computeCommand(){
 double MainController::getAngle(){return _currentAngle;} 
 
 double MainController::getTargetAngle(){return _targetAngle;}
+
+double MainController::getAngularVel(){return _angVel;}
 
 double MainController::getKp(){return _anglePID.GetKp();}
 

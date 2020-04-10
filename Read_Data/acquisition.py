@@ -9,13 +9,20 @@ import scipy.io
 
 serPort = "COM3"
 
-KpM = 0.007052  
-KiM = 0.195357
+# p = -25
+# KpM = 0.007052  
+# KiM = 0.195357
+# KdM = 0
+
+# p = -40
+KpM = 0.011740  
+KiM = 0.500114
 KdM = 0
 
-KpV = -2634.969024
-KiV = 0
-KdV = -155.865320
+
+KpV = -4457
+KiV = -0
+KdV = -318
 
 class SerialDataClass:
     def __init__(self):
@@ -41,6 +48,7 @@ class SerialDataClass:
                         "CurrentSpeed": [], 
                         "Command": [], 
                         "MotorAngle": [],
+                        "AngularVel": [],
                         "Time": [],
                         "KpM":self.KpM,
                         "KiM":self.KiM,
@@ -61,9 +69,9 @@ class SerialDataClass:
             "setKpM" : self.setKpM,
             "setKiM" : self.setKiM,
             "setKdM" : self.setKdM,
-            "setKpV" : self.setKpV,
-            "setKiV" : self.setKiV,
-            "setKdV" : self.setKdV,
+            "kpv" : self.setKpV,
+            "kiv" : self.setKiV,
+            "kdv" : self.setKdV,
             "step" : self.step,
             "idParam": self.parameterIdentification,
             "checkAngle": self.checkAngle,
@@ -83,22 +91,30 @@ class SerialDataClass:
         # axs[0].plot(x, self.data["MotorAngle"], 'g', label="Angle [deg]")
         axs[0].legend()
         axs[0].grid(True, which='both')
-        axs[0].axhline(y=0, color='k')
+        axs[0].axhline(y=0, color='k', linestyle='dashed')
         axs[0].axvline(x=0, color='k')
         axs[0].set_xlim(xmin=0)
 
+        axY = axs[1].twinx()
         axs[1].plot(x, self.data["BikeAngle"], 'g', label="Bike angle [deg]")
-        axs[1].plot(x, self.data["Command"], 'k', label="Commande [V]")
-        axs[1].legend()
+        # axs[1].plot(x, self.data["Command"], 'k', label="Commande [V]")
+        axY.plot(x, self.data["AngularVel"], 'c', label="Angular Velocity [deg/sec]")
+        
+        axY.set_ylabel("Angular Velocity [deg/sec]", color='c')
+        axs[1].set_ylabel("Angular Position [deg]", color='g')
+
+        axY.tick_params(axis='y', labelcolor = 'c')
+        axs[1].tick_params(axis='y', labelcolor = 'g')
+
+        axY.grid(True, which='both')
         axs[1].grid(True, which='both')
 
+        axs[1].axhline(y=0, color='g', linestyle = 'dashed')
+        axY.axhline(y=0, color='c', linestyle = 'dashed')
         axs[1].axvline(x=0, color='k')
-        axs[1].axhline(y=0, color='k')
-
         axs[1].set_xlim(xmin=0)
 
-
-
+        fig.tight_layout()
         plt.xlabel('Temps (sec)')
         plt.show()
 
@@ -109,7 +125,9 @@ class SerialDataClass:
         self.data["CurrentSpeed"] = []
         self.data["Command"] = []
         self.data["MotorAngle"] = []
+        self.data["AngularVel"] = []
         self.data["Time"] = []
+
 
         if in_type == "": input_type = input("Input type(stabilize/speed/accel): ")
         elif in_type=="s": input_type = "stabilize"
@@ -152,12 +170,13 @@ class SerialDataClass:
                     ser_data[0] = ser_data[0][1:-1]
                     ser_data[-1] = ser_data[-1].rstrip(', \n\r')
                     
-                    self.data["BikeAngle"].append(float(ser_data[0])*180/np.pi) #
+                    self.data["BikeAngle"].append(float(ser_data[0])*180/np.pi) # Angle du vélo
                     self.data["TargetSpeed"].append(float(ser_data[1]))    # Target Speed
                     self.data["CurrentSpeed"].append(float(ser_data[2]))    # Current Speed
                     self.data["Command"].append(float(ser_data[3]))  # Command
-                    self.data["MotorAngle"].append(float(ser_data[4]))  # Angle
-                    self.data["Time"].append(float(ser_data[5])) #Time
+                    self.data["MotorAngle"].append(float(ser_data[4]))  # Angle du moteur
+                    self.data["AngularVel"].append(float(ser_data[5])*180/np.pi)  # Vitesse angulaire
+                    self.data["Time"].append(float(ser_data[6])) #Time
                 
                 elif serialData.startswith('*'):
                     print("Timeout")

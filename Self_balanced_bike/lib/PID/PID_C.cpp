@@ -103,31 +103,31 @@ bool PID::Compute()
       lastTime = now;
       
       if(toPrint){
-         Serial.print("Speed: ");
-         Serial.print(input);
-         Serial.print("\tError: ");
-         Serial.print(error);
-         Serial.print("\t OutputSum: ");
-         Serial.print(outputSum);
-         Serial.print("\t -Kp*speed: ");
-         Serial.print(-kp * input);
-         Serial.print("\t Tension: ");
-         Serial.println(output);
-
-         // Serial.print("Theta: ");
-         // Serial.print(input, 5);
+         // Serial.print("Speed: ");
+         // Serial.print(input);
          // Serial.print("\tError: ");
-         // Serial.print(error, 5);
-         // Serial.print("\t Theta': ");
-         // Serial.print(derivative, 5);
-         // Serial.print("\t Kp*E: ");
-         // Serial.print(kp * error);
-         // Serial.print("\t Kd*s: ");
-         // Serial.print(kd * derivative);
-         // Serial.print("\t Ki/s: ");
+         // Serial.print(error);
+         // Serial.print("\t OutputSum: ");
          // Serial.print(outputSum);
-         // Serial.print("\t Target Accel: ");
+         // Serial.print("\t -Kp*speed: ");
+         // Serial.print(-kp * input);
+         // Serial.print("\t Tension: ");
          // Serial.println(output);
+
+         Serial.print("Theta: ");
+         Serial.print(input, 5);
+         Serial.print("\tError: ");
+         Serial.print(error, 5);
+         Serial.print("\t Theta': ");
+         Serial.print(derivative, 5);
+         Serial.print("\t Kp*E: ");
+         Serial.print(kp * error);
+         Serial.print("\t Kd*s: ");
+         Serial.print(kd * derivative);
+         Serial.print("\t Ki/s: ");
+         Serial.print(outputSum);
+         Serial.print("\t Target Accel: ");
+         Serial.println(output);
       }
 
 	   return true;

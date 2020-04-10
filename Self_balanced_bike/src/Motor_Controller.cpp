@@ -4,8 +4,10 @@
 // double Ki_m = 0.228711;
 // double Kd_m = -0.000111;
 
-double Kp_m = 0.002363;
-double Ki_m = 0.031257;
+
+// Pôle à -40
+double Kp_m = 0.011740;
+double Ki_m = 0.500114;
 double Kd_m = 0;
 
 static void measureSpeedTimer(){
@@ -174,6 +176,8 @@ void FlywheelMotor::printMotorData(){
         Serial.print(_speedCommand);
         Serial.print(", ");
         Serial.print(_currentAngle);
+        Serial.print(", ");
+        Serial.print(mainController.getAngularVel());
         Serial.print(", ");
         Serial.println(millis());
     }

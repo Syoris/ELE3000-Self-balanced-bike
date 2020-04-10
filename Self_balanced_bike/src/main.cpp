@@ -104,8 +104,9 @@ void loop() {
     }
 
     //! To stabilize the bike
-    if(toStabilise)
+    if(toStabilise){
         mainController.computeCommand();
+    }
 
     if(toCheckAngle){
         mainController.updateAngle();
@@ -113,6 +114,7 @@ void loop() {
         Serial.println(mainController.getAngle());
         delay(50);
     }    
+
 }
 
 
