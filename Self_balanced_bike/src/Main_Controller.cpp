@@ -4,9 +4,14 @@ double Kp_v = -5417;
 double Ki_v = -0;
 double Kd_v = -385;
 
+const float cutoff_freq   = 10;  //Cutoff frequency in Hz
+const float sampling_time = COMPUTE_INTERVAL_ANGLE/1000000; //Sampling time in seconds.
+IIR::ORDER  order  = IIR::ORDER::OD2; // Order (OD1 to OD4)
+
 MainController mainController;
 
-MainController::MainController():_anglePID(&_currentAngle, &_accelOutput, &_targetAngle, Kp_v, Ki_v, Kd_v, DIRECT){
+MainController::MainController():_anglePID(&_currentAngle, &_accelOutput, &_targetAngle, Kp_v, Ki_v, Kd_v, DIRECT),
+                                 _f(cutoff_freq, sampling_time, order){
     _targetAngle = 0;
     _Kp = Kp_v;
     _Ki = Ki_v;
@@ -27,6 +32,8 @@ MainController::MainController():_anglePID(&_currentAngle, &_accelOutput, &_targ
 
 void MainController::startController(){
     _toStabilize = true;
+    _f.flush();
+    _angVelF = 0;
     updateAngle();
     delay(100);
     updateAngle();
@@ -61,10 +68,12 @@ void MainController::computeCommand(){
 
         updateAngle();
         double currentTime = millis();
+        double timeChange = double(currentTime - _prevComputeTime)/1000; //Time change in seconds
 
-        if(_anglePID.Compute()){
-            double timeChange = double(currentTime - _prevComputeTime)/1000; //Time change in seconds
+        if(timeChange > COMPUTE_INTERVAL_ANGLE/1000000){
             _angVel = (_currentAngle - _prevAngle)/timeChange;
+            _angVelF = _f.filterIn(_angVel);
+            _anglePID.Compute(_angVelF);
 
             double speedInc = (_accelOutput*RAD_TO_DEG)*timeChange;
             double newSpeed = flywheelMotor.getTargetSpeed() + speedInc;
@@ -72,19 +81,6 @@ void MainController::computeCommand(){
             newSpeed =  newSpeed < -MAX_SPEED? -MAX_SPEED: newSpeed;
 
             flywheelMotor.setTargetSpeed(newSpeed);
-
-            // Serial.print("Current Angle: ");
-            // Serial.print(_currentAngle);
-            // Serial.print("\t Target accel: ");
-            // Serial.print(_accelOutput);
-            // Serial.print("\t Speed inc: ");
-            // Serial.print(speedInc);
-            // Serial.print("\t New speed: ");
-            // Serial.print(newSpeed);
-            // Serial.print("\t Current time: ");
-            // Serial.print(currentTime);
-            // Serial.print("\t Prev time: ");
-            // Serial.println(_prevComputeTime);
 
             _prevComputeTime = currentTime;
             _prevAngle = _currentAngle;
@@ -103,6 +99,8 @@ double MainController::getAngle(){return _currentAngle;}
 double MainController::getTargetAngle(){return _targetAngle;}
 
 double MainController::getAngularVel(){return _angVel;}
+
+double MainController::getAngularVelFiltered(){return _angVelF;}
 
 double MainController::getKp(){return _anglePID.GetKp();}
 

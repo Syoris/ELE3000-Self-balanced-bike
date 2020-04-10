@@ -58,7 +58,7 @@ PID::PID(double* Input, double* Output, double* Setpoint,
  *   pid Output needs to be computed.  returns true when the output is computed,
  *   false when nothing has been done.
  **********************************************************************************/
-bool PID::Compute()
+bool PID::Compute(double derivative)
 {
    if(!inAuto) return false;
    unsigned long now = millis();
@@ -68,11 +68,9 @@ bool PID::Compute()
       double input = *myInput;
       double error = *mySetpoint - input;
       double output;
-      double derivative;
 
       if(inNormal){
          /*Compute all the working error variables*/
-         derivative = (input-lastInput);
          outputSum += (ki * error);
 
          if(outputSum > outMax) outputSum= outMax;
@@ -153,7 +151,7 @@ void PID::SetTunings(double Kp, double Ki, double Kd, int POn)
    double SampleTimeInSec = ((double)SampleTime)/1000;
    kp = Kp;
    ki = Ki * SampleTimeInSec;
-   kd = Kd / SampleTimeInSec;
+   // kd = Kd / SampleTimeInSec;
 
   if(controllerDirection ==REVERSE)
    {
@@ -180,7 +178,7 @@ void PID::SetSampleTime(int NewSampleTime)
       double ratio  = (double)NewSampleTime
                        / (double)SampleTime;
       ki *= ratio;
-      kd /= ratio;
+      // kd /= ratio;
       SampleTime = (unsigned long)NewSampleTime;
    }
 }

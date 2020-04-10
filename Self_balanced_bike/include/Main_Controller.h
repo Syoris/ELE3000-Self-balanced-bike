@@ -5,8 +5,9 @@
 #include <PID_C.h>
 #include <IMU.h>
 #include <Motor_Controller.h>
+#include <filters.h>
 
-#define COMPUTE_INTERVAL_ANGLE 30000.0 //Interval to compute PID for speed control (in uS)
+#define COMPUTE_INTERVAL_ANGLE 10000.0 //Interval to compute PID for speed control (in uS)
 //#define RAD_TO_DEG 180/M_PI
 //#define DEG_TO_RAD M_PI/180
 
@@ -22,11 +23,17 @@ class MainController{
         double _prevComputeTime;
 
         double _Kp, _Ki, _Kd;
+
         float _ypr[3];          //[yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
         double _angVel;
+        double _prevAngVelF;
+        double _angVelF;
 
         bool _toStabilize = false;
         bool _imuRdy = false;
+
+        // Filtre
+        Filter _f;
     
     public:
         MainController();
@@ -42,6 +49,7 @@ class MainController{
         //! Interface
         double getAngle();
         double getAngularVel();
+        double getAngularVelFiltered();
         double getTargetAngle();
         double getKp();
         double getKi();

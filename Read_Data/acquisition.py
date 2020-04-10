@@ -20,9 +20,9 @@ KiM = 0.500114
 KdM = 0
 
 
-KpV = -4457
+KpV = -1500
 KiV = -0
-KdV = -318
+KdV = -0
 
 class SerialDataClass:
     def __init__(self):
@@ -45,9 +45,11 @@ class SerialDataClass:
 
         self.data = {   "BikeAngle": [],
                         "TargetSpeed": [], 
+                        "CurrentSpeedRaw": [],
                         "CurrentSpeed": [], 
                         "Command": [], 
                         "MotorAngle": [],
+                        "AngularVelRaw": [],
                         "AngularVel": [],
                         "Time": [],
                         "KpM":self.KpM,
@@ -80,6 +82,8 @@ class SerialDataClass:
         }
 
     def showData(self):
+        showRaw = True
+
         # To show the data
         x = self.data["Time"]
 
@@ -88,6 +92,7 @@ class SerialDataClass:
         fig.suptitle(self.data_name)
         axs[0].plot(x, self.data["TargetSpeed"], 'r', label="Target speed [deg/s]")
         axs[0].plot(x, self.data["CurrentSpeed"], 'b', label="Current speed [deg/s]" )
+        if(showRaw) : axs[0].plot(x, self.data["CurrentSpeedRaw"], 'y', label="Raw speed [deg/s]" )
         # axs[0].plot(x, self.data["MotorAngle"], 'g', label="Angle [deg]")
         axs[0].legend()
         axs[0].grid(True, which='both')
@@ -99,6 +104,8 @@ class SerialDataClass:
         axs[1].plot(x, self.data["BikeAngle"], 'g', label="Bike angle [deg]")
         # axs[1].plot(x, self.data["Command"], 'k', label="Commande [V]")
         axY.plot(x, self.data["AngularVel"], 'c', label="Angular Velocity [deg/sec]")
+        if(showRaw) : axY.plot(x, self.data["AngularVelRaw"], 'y', label="Raw Angular Velocity [deg/sec]")
+
         
         axY.set_ylabel("Angular Velocity [deg/sec]", color='c')
         axs[1].set_ylabel("Angular Position [deg]", color='g')
@@ -122,9 +129,11 @@ class SerialDataClass:
     def readSerialData(self, in_type=""):
         self.data["BikeAngle"] = []
         self.data["TargetSpeed"] = []
+        self.data["CurrentSpeedRaw"] = []
         self.data["CurrentSpeed"] = []
         self.data["Command"] = []
         self.data["MotorAngle"] = []
+        self.data["AngularVelRaw"] = []
         self.data["AngularVel"] = []
         self.data["Time"] = []
 
@@ -172,11 +181,13 @@ class SerialDataClass:
                     
                     self.data["BikeAngle"].append(float(ser_data[0])*180/np.pi) # Angle du vélo
                     self.data["TargetSpeed"].append(float(ser_data[1]))    # Target Speed
-                    self.data["CurrentSpeed"].append(float(ser_data[2]))    # Current Speed
-                    self.data["Command"].append(float(ser_data[3]))  # Command
-                    self.data["MotorAngle"].append(float(ser_data[4]))  # Angle du moteur
-                    self.data["AngularVel"].append(float(ser_data[5])*180/np.pi)  # Vitesse angulaire
-                    self.data["Time"].append(float(ser_data[6])) #Time
+                    self.data["CurrentSpeedRaw"].append(float(ser_data[2]))    # Current Speed
+                    self.data["CurrentSpeed"].append(float(ser_data[3]))    # Current Speed
+                    self.data["Command"].append(float(ser_data[4]))  # Command
+                    self.data["MotorAngle"].append(float(ser_data[5]))  # Angle du moteur
+                    self.data["AngularVelRaw"].append(float(ser_data[6])*180/np.pi)  # Vitesse angulaire
+                    self.data["AngularVel"].append(float(ser_data[7])*180/np.pi)  # Vitesse angulaire filtré
+                    self.data["Time"].append(float(ser_data[8])) #Time
                 
                 elif serialData.startswith('*'):
                     print("Timeout")

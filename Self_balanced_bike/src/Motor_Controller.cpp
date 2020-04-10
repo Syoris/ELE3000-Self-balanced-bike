@@ -10,6 +10,10 @@ double Kp_m = 0.011740;
 double Ki_m = 0.500114;
 double Kd_m = 0;
 
+const float cutoff_freq_motor   = 8;  //Cutoff frequency in Hz
+const float sampling_time_motor = COMPUTE_INTERVAL_ANGLE/1000000; //Sampling time in seconds.
+IIR::ORDER  order_motor  = IIR::ORDER::OD3; // Order (OD1 to OD4)
+
 static void measureSpeedTimer(){
     flywheelMotor.measureSpeed();
 }
@@ -24,7 +28,8 @@ FlywheelMotor flywheelMotor;
 FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2), 
                                 _speedMeasureTimer(),
                                 _speedComputeTimer(),
-                                _speedPID(&_speed, &_speedCommand, &_targetSpeed, Kp_m, Ki_m, Kd_m, DIRECT){
+                                _speedPID(&_speedF, &_speedCommand, &_targetSpeed, Kp_m, Ki_m, Kd_m, DIRECT),
+                                _f(cutoff_freq_motor, sampling_time_motor, order_motor){
     _prevAngle = 0;
     _currentAngle = 0;
     _targetSpeed = 5000;
@@ -49,6 +54,8 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
 }
 
 void FlywheelMotor::startMotor(){
+    _f.flush();
+    _speedF = 0;
     _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
     _speedComputeTimer.begin(computeSpeedTimer, COMPUTE_INTERVAL);
     _speedPID.InitSpeed();
@@ -86,6 +93,7 @@ void FlywheelMotor::measureSpeed(){
 
 
     _speed = ((_currentAngle - _prevAngle) * USEC_TO_SEC) / SPEED_INTERVAL;
+    _speedF = _f.filterIn(_speed);
 
     if(DEBUG_MOTOR){
         Serial.print("Delta angle: ");
@@ -125,7 +133,7 @@ void FlywheelMotor::setMotorSpeed(int speed){
 //Set speed of the flywheel with PID, if targetSpeed < 0 => CCW
 void FlywheelMotor::computeCommand(){
 
-    if(_speedPID.Compute()){
+    if(_speedPID.Compute(0)){
         printMotorData();
         double pwmVal = _speedCommand*V_TO_PWM;
         setMotorSpeed(pwmVal);
@@ -173,11 +181,15 @@ void FlywheelMotor::printMotorData(){
         Serial.print(", ");
         Serial.print(_speed);
         Serial.print(", ");
+        Serial.print(_speedF);
+        Serial.print(", ");
         Serial.print(_speedCommand);
         Serial.print(", ");
         Serial.print(_currentAngle);
         Serial.print(", ");
         Serial.print(mainController.getAngularVel());
+        Serial.print(", ");
+        Serial.print(mainController.getAngularVelFiltered());
         Serial.print(", ");
         Serial.println(millis());
     }

@@ -78,9 +78,9 @@ grid on
 hold off
 
 % Avec accélération
-load(fullfile("PythonData", 'Velo_BO_Mot_01'))
+load(fullfile("PythonData", 'Velo_BO_Mot_02'))
 startVal = 1;
-nVal = 30;
+nVal = 22;
 simTime = Time(nVal+1);
 
 AngleInitial = BikeAngle(startVal);
@@ -102,7 +102,7 @@ hold off
 % Comparaison des vitesses
 subplot(1, 3, 3)
 hold on
-plot(Time(1:endVal), CurrentSpeed(1:endVal), 'r', 'DisplayName', 'Vitesse (exp)')
+plot(Time(1:nVal+1), CurrentSpeed(startVal:startVal+nVal), 'r', 'DisplayName', 'Vitesse (exp)')
 plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Vitesse (théo)')
 legend
 title("Comparaison des vitesses du moteur")
@@ -236,16 +236,19 @@ fprintf("\tKd: %4.6f\n", Kd_v)
 clc
 close all
 
-plotExp = 0;
+plotExp = 1;
+nData = 75;
 
 if plotExp == true
-    load(fullfile("PythonData", 'Velo_PD_02  '))
-    simTime = Time(end);
+    load(fullfile("PythonData", 'Velo_PD_03'))
+    simTime = Time(nData);
     AngleInitial = BikeAngle(1);
 else
     simTime = 2;
     AngleInitial = -5;
 end
+
+
 
 sim("Simulink/Velo_Complet_BF")
 sim("Simulink/Velo_BF")
@@ -254,15 +257,15 @@ sim("Simulink/Velo_BF")
 figure
 suptitle("Vélo Complet")
 % Angle
-subplot(2, 1, 1)
+subplot(3, 1, 1)
 hold on
 %   Exp data
 if plotExp == true
-    plot(Time, BikeAngle, 'r', 'DisplayName', 'Expérimental')
+    plot(Time(1:nData), BikeAngle(1:nData), 'r', 'DisplayName', 'Expérimental')
 end
 %   Théo data
 plot(Theta_BF(:, 1), Theta_BF(:, 2), 'b', 'DisplayName', 'Théorique')
-plot(Theta_BF_nm(:, 1), Theta_BF_nm(:, 2), 'k', 'DisplayName', 'Sans moteur')
+% plot(Theta_BF_nm(:, 1), Theta_BF_nm(:, 2), 'k', 'DisplayName', 'Sans moteur')
 legend
 title("Position")
 xlabel("Temps (sec)")
@@ -270,18 +273,18 @@ ylabel("Angle [deg]")
 grid on
 hold off
 
-% Vitesse
-subplot(2, 1, 2)
+% Vitesse flywheel
+subplot(3, 1, 2)
 hold on
 %   Exp data
 if plotExp == true
-    plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Vitesse (exp)')
-    plot(Time, TargetSpeed, 'r--', 'DisplayName', 'Vitesse désirée (ex)')
+    plot(Time(1:nData), CurrentSpeed(1:nData), 'r', 'DisplayName', 'Vitesse (exp)')
+    plot(Time(1:nData), TargetSpeed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (ex)')
 end
 %   Theo Data
 plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Vitesse actuelle (theo)')
 plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'b--', 'DisplayName', 'Vitesse désirée (theo)')
-plot(Phi_dot_des_nm(:, 1), Phi_dot_des_nm(:, 2), 'k--', 'DisplayName', 'Vitesse désirée sans moteur') % Simu parfaite
+% plot(Phi_dot_des_nm(:, 1), Phi_dot_des_nm(:, 2), 'k--', 'DisplayName', 'Vitesse désirée sans moteur') % Simu parfaite
 legend
 title("Vitesse")
 xlabel("Temps (sec)")
@@ -289,6 +292,22 @@ ylabel("Vitessse [deg/sec]")
 grid on
 hold off
 
+% Vitesse vélo
+subplot(3, 1, 3)
+hold on
+%   Exp data
+if plotExp == true
+    plot(Time(1:nData), AngularVel(1:nData), 'r', 'DisplayName', 'Vitesse (exp)')
+end
+%   Theo Data
+plot(Theta_dot_BF(:, 1), Theta_dot_BF(:, 2), 'b', 'DisplayName', 'Vitesse avec moteur')
+% plot(Theta_dot_BF_nm(:, 1), Theta_dot_BF_nm(:, 2), 'k', 'DisplayName', 'Vitesse sans moteur')
+legend
+title("Vitesse du vélo")
+xlabel("Temps (sec)")
+ylabel("Vitessse [deg/sec]")
+grid on
+hold off
 
 fprintf("---- Maximum ----\n");
 fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(abs(Phi_dot_des(:, 2))))
