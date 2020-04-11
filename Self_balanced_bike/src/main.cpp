@@ -40,6 +40,7 @@ String commande;    //Command read through serial port
 unsigned int prevTime = 0;
 unsigned int prevTimeCommand = 0;
 unsigned int prevTimeAccel = 0;
+unsigned int prevTimeAngle = 0;
 unsigned long currentTime = 0;
 
 
@@ -107,12 +108,14 @@ void loop() {
     if(toStabilise){
         mainController.computeCommand();
     }
-
+    
     if(toCheckAngle){
         mainController.updateAngle();
-        Serial.print("#");
-        Serial.println(mainController.getAngle());
-        delay(50);
+        if(currentTime - prevTimeAngle > 50){
+            Serial.print("#");
+            Serial.println(mainController.getAngle(), 5);
+            prevTimeAngle = currentTime;
+        }
     }    
 
 }

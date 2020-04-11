@@ -12,7 +12,7 @@ double Kd_m = 0;
 
 const float cutoff_freq_motor   = 8;  //Cutoff frequency in Hz
 const float sampling_time_motor = COMPUTE_INTERVAL_ANGLE/1000000; //Sampling time in seconds.
-IIR::ORDER  order_motor  = IIR::ORDER::OD3; // Order (OD1 to OD4)
+IIR::ORDER  order_motor  = IIR::ORDER::OD1; // Order (OD1 to OD4)
 
 static void measureSpeedTimer(){
     flywheelMotor.measureSpeed();
@@ -190,6 +190,8 @@ void FlywheelMotor::printMotorData(){
         Serial.print(mainController.getAngularVel());
         Serial.print(", ");
         Serial.print(mainController.getAngularVelFiltered());
+        Serial.print(", ");
+        Serial.print(mainController.getTargetAccel());
         Serial.print(", ");
         Serial.println(millis());
     }

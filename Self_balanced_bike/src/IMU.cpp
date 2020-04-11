@@ -59,8 +59,8 @@ bool IMU_Setup(){
     mpu.setYAccelOffset(805);
     mpu.setZAccelOffset(1285);
     mpu.setXGyroOffset(54);
-    mpu.setXGyroOffset(-17);
-    mpu.setXGyroOffset(33);
+    mpu.setYGyroOffset(-17);
+    mpu.setZGyroOffset(33);
 
     // make sure it worked (returns 0 if so)
     return checkConnection();
@@ -68,6 +68,12 @@ bool IMU_Setup(){
 
 bool checkConnection(){
    if (devStatus == 0) {
+       // Calibration Time: generate offsets and calibrate our MPU6050
+        // mpu.CalibrateAccel(6);
+        // mpu.CalibrateGyro(6);
+        // delay(1500);
+        // mpu.PrintActiveOffsets();
+
         // turn on the DMP, now that it's ready
         Serial.println(F("Enabling DMP..."));
         mpu.setDMPEnabled(true);
@@ -97,9 +103,9 @@ bool checkConnection(){
     }
 }
 
-unsigned int prevTimeAng = 0;
-float prevAngle = 0;
-int32_t gyro[3];
+// unsigned int prevTimeAng = 0;
+// float prevAngle = 0;
+// int32_t gyro[3];
 
 
 void IMU_Compute(float* ypr){

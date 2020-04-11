@@ -27,8 +27,8 @@
 #define USEC_TO_SEC 1000000.0
 #define V_TO_PWM 256/6
 
-#define SPEED_INTERVAL 5000.0 //Interval to measure speed (in uS)
-#define COMPUTE_INTERVAL 5000.0 //Interval to compute PID for speed control (in uS)
+#define SPEED_INTERVAL 10000.0 //Interval to measure speed (in uS)
+#define COMPUTE_INTERVAL 10000.0 //Interval to compute PID for speed control (in uS)
 
 class FlywheelMotor{
     private:

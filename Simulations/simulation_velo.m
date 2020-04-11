@@ -236,7 +236,7 @@ fprintf("\tKd: %4.6f\n", Kd_v)
 clc
 close all
 
-plotExp = 1;
+plotExp = 0;
 nData = 75;
 
 if plotExp == true
@@ -245,7 +245,7 @@ if plotExp == true
     AngleInitial = BikeAngle(1);
 else
     simTime = 2;
-    AngleInitial = -5;
+    AngleInitial = 7.5;
 end
 
 
@@ -312,4 +312,45 @@ hold off
 fprintf("---- Maximum ----\n");
 fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(abs(Phi_dot_des(:, 2))))
 fprintf("\tAccel max [deg/sec]: %6.2f\n", max(abs(Phi_dot_dot_des(:, 2))))
+
+%% Comparaison expérimental
+clc
+close all
+
+n1 = "03";
+n2 = "05";
+
+% Plot results
+figure
+suptitle("Vélo Complet")
+% Angle
+subplot(2, 1, 1)
+hold on
+load(fullfile("PythonData", 'Velo_Exp_'+n1))
+plot(Time, BikeAngle, 'r', 'DisplayName', 'Angle Exp 1')
+load(fullfile("PythonData", 'Velo_Exp_'+n2))
+plot(Time, BikeAngle, 'b', 'DisplayName', 'Angle Exp 2')
+legend
+title("Position")
+xlabel("Temps (sec)")
+ylabel("Angle [deg]")
+grid on
+hold off
+
+% Vitesse flywheel
+subplot(2, 1, 2)
+hold on
+%   Exp data
+load(fullfile("PythonData", 'Velo_Exp_'+n1))
+plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Vitesse (exp 1 )')
+plot(Time, TargetSpeed, 'r--', 'DisplayName', 'Vitesse désirée (exp 1)')
+load(fullfile("PythonData", 'Velo_Exp_'+n2))
+plot(Time, CurrentSpeed, 'b', 'DisplayName', 'Vitesse (exp 1 )')
+plot(Time, TargetSpeed, 'b--', 'DisplayName', 'Vitesse désirée (exp 1)')
+legend
+title("Vitesse")
+xlabel("Temps (sec)")
+ylabel("Vitessse [deg/sec]")
+grid on
+hold off
 

@@ -152,6 +152,7 @@ void PID::SetTunings(double Kp, double Ki, double Kd, int POn)
    kp = Kp;
    ki = Ki * SampleTimeInSec;
    // kd = Kd / SampleTimeInSec;
+   kd = Kd;
 
   if(controllerDirection ==REVERSE)
    {

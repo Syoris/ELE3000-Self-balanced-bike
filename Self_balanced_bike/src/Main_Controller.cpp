@@ -1,8 +1,8 @@
 #include "Main_Controller.h"
 
-double Kp_v = -5417;
+double Kp_v = -2500;
 double Ki_v = -0;
-double Kd_v = -385;
+double Kd_v = -100;
 
 const float cutoff_freq   = 10;  //Cutoff frequency in Hz
 const float sampling_time = COMPUTE_INTERVAL_ANGLE/1000000; //Sampling time in seconds.
@@ -34,9 +34,11 @@ void MainController::startController(){
     _toStabilize = true;
     _f.flush();
     _angVelF = 0;
-    updateAngle();
-    delay(100);
-    updateAngle();
+
+    unsigned int curTime = millis();
+    while(millis() - curTime < 250)
+        updateAngle();
+
     flywheelMotor.setMotorSpeed(0);
     flywheelMotor.setTargetSpeed(0);
     _anglePID.InitSpeed();
@@ -60,7 +62,7 @@ void MainController::updateAngle(){
     if (!_imuRdy) return; //Check IMU is working
 
     IMU_Compute(_ypr);
-    _currentAngle = _ypr[1] ;//+ 1.4*DEG_TO_RAD; // to correct sensor
+    _currentAngle = _ypr[1] + ZERO_OFFSET; // to correct sensor
 }
 
 void MainController::computeCommand(){
@@ -101,6 +103,8 @@ double MainController::getTargetAngle(){return _targetAngle;}
 double MainController::getAngularVel(){return _angVel;}
 
 double MainController::getAngularVelFiltered(){return _angVelF;}
+
+double MainController::getTargetAccel(){return _accelOutput*RAD_TO_DEG;}
 
 double MainController::getKp(){return _anglePID.GetKp();}
 
