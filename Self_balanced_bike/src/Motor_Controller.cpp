@@ -47,7 +47,7 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
 
 void FlywheelMotor::startMotor(){
     _f.flush();
-    _speedF = 0;
+    _speed = 0;
     _motor_enc.write(0);
     _prevAngle = 0;
     _currentAngle = 0;
@@ -84,8 +84,8 @@ void FlywheelMotor::measureSpeed(){
     _currentAngle = readAngle();
 
 
-    _speed = ((_currentAngle - _prevAngle) * USEC_TO_SEC) / SPEED_INTERVAL;
-    _speedF = _f.filterIn(_speed);
+    _speedRaw = ((_currentAngle - _prevAngle) * USEC_TO_SEC) / SPEED_INTERVAL;
+    _speed = _f.filterIn(_speedRaw);
 
     if(DEBUG_MOTOR){
         Serial.print("Delta angle: ");
@@ -124,11 +124,11 @@ void FlywheelMotor::setMotorSpeed(int speed){
 
 //Set speed of the flywheel with PID, if targetSpeed < 0 => CCW
 void FlywheelMotor::computeCommand(){
-    double error = _targetSpeed - _speedF;
+    double error = _targetSpeed - _speed;
     double output;
 
     _outputSum += (_KiSamp * error);
-    output = _outputSum - _Kp * _speedF;
+    output = _outputSum - _Kp * _speed;
 
     //Saturate output voltage to +/- 6V
     if(output > 6) output = 6;
@@ -187,26 +187,34 @@ void FlywheelMotor::brakeMotor(){
 }
 
 //! Interface
+// Send bike data to Python Interface
 void FlywheelMotor::printMotorData(){
+    // Data format:
+    // #Bike_Angle, Bike_Angle_Raw, Bike_AngVel, Bike_AngVel_Raw, FW_Angle, FW_Angle_Raw
+    //   FW_Speed, FW_Speed_Raw, FW_Target_Speed, FW_Target_Accel, FW_Command, Time
     if(!_printTextData){
         Serial.print("#");
-        Serial.print(*_bikeAngle, 5);
+        Serial.print(mainController.getAngle(), 5);
         Serial.print(", ");
-        Serial.print(_targetSpeed);
-        Serial.print(", ");
-        Serial.print(_speed);
-        Serial.print(", ");
-        Serial.print(_speedF);
-        Serial.print(", ");
-        Serial.print(_speedCommand);
-        Serial.print(", ");
-        Serial.print(_currentAngle);
+        Serial.print(mainController.getAngleRaw(), 5);
         Serial.print(", ");
         Serial.print(mainController.getAngularVel());
         Serial.print(", ");
-        Serial.print(mainController.getAngularVelFiltered());
+        Serial.print(mainController.getAngularVelRaw());
+        Serial.print(", ");
+        Serial.print(_currentAngle);
+        Serial.print(", ");
+        Serial.print(_currentAngleRaw);
+        Serial.print(", ");
+        Serial.print(_speed);
+        Serial.print(", ");
+        Serial.print(_speedRaw);
+        Serial.print(", ");
+        Serial.print(_targetSpeed);
         Serial.print(", ");
         Serial.print(mainController.getTargetAccel());
+        Serial.print(", ");
+        Serial.print(_speedCommand);
         Serial.print(", ");
         Serial.println(millis());
     }
@@ -215,7 +223,7 @@ void FlywheelMotor::printMotorData(){
         Serial.print(millis());
 
         Serial.print("\tBike Angle:");  //deg
-        Serial.print(*_bikeAngle);
+        Serial.print(mainController.getAngle(), 5);
 
         Serial.print("\t\tGoal: ");       //deg/sec
         Serial.print(_targetSpeed);
@@ -235,8 +243,12 @@ void FlywheelMotor::printMotorData(){
 //Return current motor angle
 double FlywheelMotor::getAngle(){return _currentAngle;}
 
+double FlywheelMotor::getAngleRaw(){return _currentAngleRaw;}
+
 //Return current motor speed in deg/sec
 double FlywheelMotor::getSpeed(){ return _speed;}
+
+double FlywheelMotor::getSpeedRaw(){ return _speedRaw;}
 
 //Return current motor speed in rpm
 double FlywheelMotor::getSpeedRPM(){ return _speed/6;}
@@ -251,8 +263,6 @@ double FlywheelMotor::getKd(){return _Kd;}
 
 
 void FlywheelMotor::setTargetSpeed(double targetSpeed){ _targetSpeed = targetSpeed;}
-
-void FlywheelMotor::setBikeAngle(double* bikeAngle){ _bikeAngle = bikeAngle;}
 
 void FlywheelMotor::setKp(double Kp){_Kp = Kp;}
 

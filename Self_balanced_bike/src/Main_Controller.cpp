@@ -16,8 +16,6 @@ MainController::MainController():_f(cutoff_freq, sampling_time, order){
     _Ki = Ki_v;
     _Kd = Kd_v;
 
-    flywheelMotor.setBikeAngle(&_currentAngle);
-
     _imuRdy = IMU_Setup();
 
 }
@@ -25,7 +23,7 @@ MainController::MainController():_f(cutoff_freq, sampling_time, order){
 void MainController::startController(){
     _toStabilize = true;
     _f.flush();
-    _angVelF = 0;
+    _angVel = 0;
 
     unsigned int curTime = millis();
     while(millis() - curTime < 250)
@@ -66,15 +64,15 @@ void MainController::computeCommand(){
         unsigned long timeChange = (currentTime - _prevComputeTime)/1000; //Time change in seconds
 
         if(timeChange > COMPUTE_INTERVAL_ANGLE/1000000){
-            _angVel = (_currentAngle - _prevAngle)/timeChange;  //Compute angular velocity
-            _angVelF = _f.filterIn(_angVel);                    //Filter velocity
+            _angVelRaw = (_currentAngle - _prevAngle)/timeChange;  //Compute angular velocity
+            _angVel = _f.filterIn(_angVel);                    //Filter velocity
 
             double error = _targetAngle - _currentAngle;
             double output;
 
 
             //Compute PD   
-            output = _Kp * error - _Kd * _angVelF; //output = Kp*Error - Kd*Angular speed
+            output = _Kp * error - _Kd * _angVel; //output = Kp*Error - Kd*Angular speed
             _accelOutput = output;
 
             double speedInc = (_accelOutput*RAD_TO_DEG)*timeChange;
@@ -95,11 +93,13 @@ void MainController::computeCommand(){
 //! Interface
 double MainController::getAngle(){return _currentAngle;} 
 
-double MainController::getTargetAngle(){return _targetAngle;}
+double MainController::getAngleRaw(){return _currentAngleRaw;} 
 
 double MainController::getAngularVel(){return _angVel;}
 
-double MainController::getAngularVelFiltered(){return _angVelF;}
+double MainController::getAngularVelRaw(){return _angVelRaw;}
+
+double MainController::getTargetAngle(){return _targetAngle;}
 
 double MainController::getTargetAccel(){return _accelOutput*RAD_TO_DEG;}
 

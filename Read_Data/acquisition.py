@@ -47,15 +47,17 @@ class SerialDataClass:
         self.KiV = KiV
         self.KdV = KdV
 
-        self.data = {   "BikeAngle": [],
-                        "TargetSpeed": [], 
-                        "CurrentSpeedRaw": [],
-                        "CurrentSpeed": [], 
-                        "Command": [], 
-                        "MotorAngle": [],
-                        "AngularVelRaw": [],
-                        "AngularVel": [],
-                        "TargetAccel": [],
+        self.data = {   "Bike_Angle": [],           # Bike angle [deg]
+                        "Bike_Angle_Raw": [],       # Bike angle [deg]
+                        "Bike_AngularVel": [],      # Bike angular velocity [deg/sec]
+                        "Bike_AngularVel_Raw": [],  # Bike angular velocity, raw [deg/sec]
+                        "FW_Angle": [],             # Flywheel angle [deg]
+                        "FW_Angle_Raw": [],         # Flywheel angle [deg]
+                        "FW_Speed": [],             # Flywheel current speed, filtered [deg]
+                        "FW_Speed_Raw": [],         # Flywheel current speed, raw [deg]
+                        "FW_Target_Speed": [],      # Flywheel target speed [deg/sec]    
+                        "FW_Target_Accel": [],      # Flywheel target accel [deg/sec**2]   
+                        "FW_Command": [],           # Flywheel command [V]
                         "Time": [],
                         "KpM":self.KpM,
                         "KiM":self.KiM,
@@ -97,11 +99,11 @@ class SerialDataClass:
         fig, axs = plt.subplots(2, sharex=True)
         fig.suptitle(self.data_name)
         axY = axs[0].twinx()
-        axs[0].plot(x, self.data["TargetSpeed"], 'r', label="Target speed [deg/s]")
-        axs[0].plot(x, self.data["CurrentSpeed"], 'b', label="Current speed [deg/s]" )
-        # axY.plot(x, self.data["TargetAccel"], 'c', label="Target Accel [deg/s**2]" )
-        if(showRaw) : axs[0].plot(x, self.data["CurrentSpeedRaw"], 'y', label="Raw speed [deg/s]" )
-        # axs[0].plot(x, self.data["MotorAngle"], 'g', label="Angle [deg]")
+        axs[0].plot(x, self.data["FW_Target_Speed"], 'r', label="Target speed [deg/s]")
+        axs[0].plot(x, self.data["FW_Speed"], 'b', label="Current speed [deg/s]" )
+        # axY.plot(x, self.data["FW_Target_Accel"], 'c', label="Target Accel [deg/s**2]" )
+        if(showRaw) : axs[0].plot(x, self.data["FW_Speed_Raw"], 'y', label="Raw speed [deg/s]" )
+        axs[0].plot(x, self.data["FW_Angle"], 'g', label="Angle [deg]")
         axs[0].legend()
         axs[0].grid(True, which='both')
         axs[0].axhline(y=0, color='k', linestyle='dashed')
@@ -112,7 +114,7 @@ class SerialDataClass:
 
         axY = axs[1].twinx()
         # axs[1].plot(x, self.data["BikeAngle"], 'g', label="Bike angle [deg]")
-        axs[1].plot(x, self.data["Command"], 'k', label="Commande [V]")
+        axs[1].plot(x, self.data["FW_Command"], 'k', label="Commande [V]")
         # axY.plot(x, self.data["AngularVel"], 'c', label="Angular Velocity [deg/sec]")
         # if(showRaw) : axY.plot(x, self.data["AngularVelRaw"], 'y', label="Raw Angular Velocity [deg/sec]")
 
@@ -137,18 +139,20 @@ class SerialDataClass:
 
     # Read Serial data
     def readSerialData(self, in_type=""):
-        self.data["BikeAngle"] = []
-        self.data["TargetSpeed"] = []
-        self.data["CurrentSpeedRaw"] = []
-        self.data["CurrentSpeed"] = []
-        self.data["Command"] = []
-        self.data["MotorAngle"] = []
-        self.data["AngularVelRaw"] = []
-        self.data["AngularVel"] = []
-        self.data["TargetAccel"] = []
+        self.data["Bike_Angle"] = []
+        self.data["Bike_Angle_Raw"] = []
+        self.data["Bike_AngularVel"] = []
+        self.data["Bike_AngularVel_Raw"] = []
+        self.data["FW_Angle"] = []
+        self.data["FW_Angle_Raw"] = []
+        self.data["FW_Speed"] = []
+        self.data["FW_Speed_Raw"] = []
+        self.data["FW_Target_Speed"] = []
+        self.data["FW_Target_Accel"] = []
+        self.data["FW_Command"] = []
         self.data["Time"] = []
 
-
+        # Ask user for input type
         if in_type == "": input_type = input("Input type(stabilize/speed/accel): ")
         elif in_type=="s": input_type = "stabilize"
         elif in_type=="accel": input_type = "accel"
@@ -157,9 +161,6 @@ class SerialDataClass:
             print("Invalid type")
             return
             
-
-        
-
         if input_type == "speed":
             goalSpeed = input("Target speed: ")
             self.setTargetSpeed(goalSpeed)
@@ -180,7 +181,11 @@ class SerialDataClass:
         self.ser.flushInput()
         self.ser.flushOutput()
         try:
-            #Format des données: #target_speed, current_speed, speedCommand
+            """
+                Data Format:
+                    #Bike_Angle, Bike_Angle_Raw, Bike_AngVel, Bike_AngVel_Raw, FW_Angle, FW_Angle_Raw
+                      FW_Speed, FW_Speed_Raw, FW_Target_Speed, FW_Target_Accel, FW_Command, Time
+            """
             while True:
                 serialData = self.ser.readline().decode('utf-8')
                 if serialData.startswith('#'):
@@ -189,17 +194,19 @@ class SerialDataClass:
                     ser_data = ser_data.split(',')
                     ser_data[0] = ser_data[0][1:-1]
                     ser_data[-1] = ser_data[-1].rstrip(', \n\r')
-                    
-                    self.data["BikeAngle"].append(float(ser_data[0])*180/np.pi) # Angle du vélo
-                    self.data["TargetSpeed"].append(float(ser_data[1]))    # Target Speed
-                    self.data["CurrentSpeedRaw"].append(float(ser_data[2]))    # Current Speed
-                    self.data["CurrentSpeed"].append(float(ser_data[3]))    # Current Speed
-                    self.data["Command"].append(float(ser_data[4]))  # Command
-                    self.data["MotorAngle"].append(float(ser_data[5]))  # Angle du moteur
-                    self.data["AngularVelRaw"].append(float(ser_data[6])*180/np.pi)  # Vitesse angulaire
-                    self.data["AngularVel"].append(float(ser_data[7])*180/np.pi)  # Vitesse angulaire filtré
-                    self.data["TargetAccel"].append(float(ser_data[8]))  # Vitesse angulaire filtré
-                    self.data["Time"].append(float(ser_data[9])) #Time
+
+                    self.data["Bike_Angle"].append(float(ser_data[0])*180/np.pi) # Angle du vélo
+                    self.data["Bike_Angle_Raw"].append(float(ser_data[1])*180/np.pi) # Angle du vélo
+                    self.data["Bike_AngularVel"].append(float(ser_data[2])*180/np.pi)
+                    self.data["Bike_AngularVel_Raw"].append(float(ser_data[3])*180/np.pi)
+                    self.data["FW_Angle"].append(float(ser_data[4]))
+                    self.data["FW_Angle_Raw"].append(float(ser_data[5]))
+                    self.data["FW_Speed"].append(float(ser_data[6]))
+                    self.data["FW_Speed_Raw"].append(float(ser_data[7]))
+                    self.data["FW_Target_Speed"].append(float(ser_data[8]))
+                    self.data["FW_Target_Accel"].append(float(ser_data[9]))
+                    self.data["FW_Command"].append(float(ser_data[10]))
+                    self.data["Time"].append(float(ser_data[11]))
                 
                 elif serialData.startswith('*'):
                     print("Timeout")
@@ -209,8 +216,6 @@ class SerialDataClass:
             print("Interrupted")
             self.ser.write(endCom.encode())
 
-        # self.ser.flushInput()
-        # serialData = self.ser.readline().decode('utf-8')
 
         while(not (serialData.startswith('!'))):
             serialData = self.ser.readline().decode('utf-8')
@@ -236,9 +241,8 @@ class SerialDataClass:
         sub_val = self.data["Time"][0]
         self.data["Time"] = [(x - sub_val)/1000 for x in self.data["Time"]]
 
-        print("Angle inital: ", self.data["BikeAngle"][0])
-        if(self.data["BikeAngle"][0] > 7 or self.data["BikeAngle"][0] < 6): print("!!!ALERTE!!!")
-        # self.saveData()
+        print("Angle inital: ", self.data["Bike_Angle"][0])
+        if(self.data["Bike_Angle"][0] > 7 or self.data["Bike_Angle"][0] < 6): print("!!!ALERTE!!!")
 
     def saveData(self):
         self.data_name = input("Enter save name: ")

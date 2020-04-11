@@ -36,9 +36,10 @@ class FlywheelMotor{
         IntervalTimer _speedComputeTimer;
 
         double _speed;
-        double _speedF; //Filtered speed
-        double _prevAngle;
+        double _speedRaw;
         double _currentAngle;
+        double _currentAngleRaw;
+        double _prevAngle;
 
         //PID variables
         double _targetSpeed;
@@ -46,7 +47,6 @@ class FlywheelMotor{
         double _Kp, _Kd, _Ki;
         double _KiSamp;     //Ki modified by compute time
         double _outputSum;  //I
-        double* _bikeAngle;
 
         //Pinout
         int _pin1 = MOTOR_PIN_1;
@@ -75,9 +75,11 @@ class FlywheelMotor{
         void printMotorData();
 
         double getSpeed();
-        double getTargetSpeed();
+        double getSpeedRaw();
         double getSpeedRPM();
         double getAngle();
+        double getAngleRaw();
+        double getTargetSpeed();
         double getKp();
         double getKi();
         double getKd();
@@ -85,7 +87,6 @@ class FlywheelMotor{
         void setTargetSpeed(double targetSpeed);
         void setMotorSpeed(int speed, bool dir);
         void setMotorSpeed(int speed);
-        void setBikeAngle(double* bikeAngle);
         void setKp(double Kp);
         void setKi(double Ki);
         void setKd(double Kd);

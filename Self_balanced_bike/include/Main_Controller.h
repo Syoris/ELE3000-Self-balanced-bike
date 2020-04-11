@@ -11,18 +11,23 @@
 
 class MainController{
     private:
+        // Bike angle
         double _currentAngle;
+        double _currentAngleRaw;
         double _prevAngle;
         double _targetAngle;
-        double _accelOutput;    //Target speed of flywheel
-        unsigned long _prevComputeTime;
-
-        double _Kp, _Ki, _Kd;
-
         float _ypr[3];          //[yaw, pitch, roll]   yaw/pitch/roll container and gravity vector
-        double _angVel;
-        double _prevAngVelF;
-        double _angVelF;
+
+        // Bike Angular velocity
+        double _angVel;     
+        double _angVelRaw;
+        double _prevAngVel;
+
+        unsigned long _prevComputeTime;
+        
+        // PID variables
+        double _accelOutput;    //Target speed of flywheel
+        double _Kp, _Ki, _Kd;
 
         bool _toStabilize = false;
         bool _imuRdy = false;
@@ -41,8 +46,9 @@ class MainController{
 
         //! Interface
         double getAngle();
+        double getAngleRaw();
         double getAngularVel();
-        double getAngularVelFiltered();
+        double getAngularVelRaw();
         double getTargetAngle();
         double getTargetAccel();
 
