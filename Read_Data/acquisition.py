@@ -111,10 +111,10 @@ class SerialDataClass:
         axs[0].set_xlim(xmin=0)
 
         axY = axs[1].twinx()
-        axs[1].plot(x, self.data["BikeAngle"], 'g', label="Bike angle [deg]")
-        # axs[1].plot(x, self.data["Command"], 'k', label="Commande [V]")
-        axY.plot(x, self.data["AngularVel"], 'c', label="Angular Velocity [deg/sec]")
-        if(showRaw) : axY.plot(x, self.data["AngularVelRaw"], 'y', label="Raw Angular Velocity [deg/sec]")
+        # axs[1].plot(x, self.data["BikeAngle"], 'g', label="Bike angle [deg]")
+        axs[1].plot(x, self.data["Command"], 'k', label="Commande [V]")
+        # axY.plot(x, self.data["AngularVel"], 'c', label="Angular Velocity [deg/sec]")
+        # if(showRaw) : axY.plot(x, self.data["AngularVelRaw"], 'y', label="Raw Angular Velocity [deg/sec]")
 
         
         axY.set_ylabel("Angular Velocity [deg/sec]", color='c')

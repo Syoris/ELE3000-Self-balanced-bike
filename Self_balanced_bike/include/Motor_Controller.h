@@ -2,7 +2,6 @@
 #define MOTOR_CONTROLLER_H
 
 #include "Encoder.h"
-#include <PID_C.h>
 #include <Main_Controller.h>
 #include <filters.h>
 
@@ -42,10 +41,11 @@ class FlywheelMotor{
         double _currentAngle;
 
         //PID variables
-        PID _speedPID;
         double _targetSpeed;
         double _speedCommand;
         double _Kp, _Kd, _Ki;
+        double _KiSamp;     //Ki modified by compute time
+        double _outputSum;  //I
         double* _bikeAngle;
 
         //Pinout
@@ -53,7 +53,7 @@ class FlywheelMotor{
         int _pin2 = MOTOR_PIN_2;
         
         //Pour options
-        bool _printTextData = false;
+        bool _printTextData = false;    //For debugging
 
         //Filtre
         Filter _f;
@@ -63,13 +63,12 @@ class FlywheelMotor{
 
         void startMotor();
         void stopMotor();
+        void computeCommand();
 
         double readAngle();
         void measureSpeed();
         void stepReponse(double stepVoltage);
 
-        void computeCommand();
-        
         void brakeMotor();
 
         //! Interface
@@ -90,8 +89,6 @@ class FlywheelMotor{
         void setKp(double Kp);
         void setKi(double Ki);
         void setKd(double Kd);
-        void setPID();
-        void setPID(double Kp, double Ki, double Kd);
 };
 
 extern FlywheelMotor flywheelMotor;

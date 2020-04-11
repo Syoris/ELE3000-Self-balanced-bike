@@ -110,10 +110,14 @@ hold off
 %% Réponse à une Rampe
 clc
 close all
+plotExp = 0;
 
-load(fullfile("PythonData", 'Moteur_BF_C3_15000'))
-simTime = Time(end);
-targetAccel = 15000;
+if plotExp == true
+    load(fullfile("PythonData", 'Moteur_BF_C3_15000'))
+    simTime = Time(end);
+end
+
+targetAccel = 5000;
 targetSpeed = 8000;
 sim("Simulink/Moteur_BF_v2")
 
@@ -121,8 +125,10 @@ figure
 suptitle("PID")
 subplot(1, 2, 1)
 hold on
-plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Expérimental')
-% plot(Time, TargetSpeed, 'k', 'DisplayName', 'Target Speed')
+if plotExp == true
+    plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Expérimental')
+    % plot(Time, TargetSpeed, 'k', 'DisplayName', 'Target Speed')
+end
 plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Théorique')
 plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'k', 'DisplayName', 'Vitesse désiré')
 legend
@@ -134,7 +140,9 @@ hold off
 
 subplot(1, 2, 2)
 hold on
-plot(Time, Command, 'r', 'DisplayName', 'Expérimental')
+if plotExp == true
+    plot(Time, Command, 'r', 'DisplayName', 'Expérimental')
+end
 plot(U(:, 1), U(:, 2), 'b', 'DisplayName', 'Théorique')
 legend
 title("Tension")

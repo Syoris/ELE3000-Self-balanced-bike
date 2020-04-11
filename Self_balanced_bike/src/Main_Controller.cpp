@@ -10,19 +10,11 @@ IIR::ORDER  order  = IIR::ORDER::OD2; // Order (OD1 to OD4)
 
 MainController mainController;
 
-MainController::MainController():_anglePID(&_currentAngle, &_accelOutput, &_targetAngle, Kp_v, Ki_v, Kd_v, DIRECT),
-                                 _f(cutoff_freq, sampling_time, order){
+MainController::MainController():_f(cutoff_freq, sampling_time, order){
     _targetAngle = 0;
     _Kp = Kp_v;
     _Ki = Ki_v;
     _Kd = Kd_v;
-    
-    _anglePID.SetMode(AUTOMATIC);
-    _anglePID.SetOutputLimits(-MAX_ACCEL, MAX_ACCEL);
-    _anglePID.SetTunings(_Kp, _Ki, _Kd);
-    _anglePID.SetSampleTime(COMPUTE_INTERVAL_ANGLE/1000);
-    _anglePID.SetComputeMode(true);
-    _anglePID.toPrint = false;
 
     flywheelMotor.setBikeAngle(&_currentAngle);
 
@@ -41,8 +33,8 @@ void MainController::startController(){
 
     flywheelMotor.setMotorSpeed(0);
     flywheelMotor.setTargetSpeed(0);
-    _anglePID.InitSpeed();
     flywheelMotor.startMotor();
+
     _prevComputeTime = millis();
     _prevAngle = _currentAngle;
 }
@@ -51,11 +43,11 @@ void MainController::stopController(){
     _toStabilize = false;
     flywheelMotor.stopMotor();
     Serial.print("!");
-    Serial.print(_anglePID.GetKp(), 5);
+    Serial.print(_Kp, 5);
     Serial.print(", ");
-    Serial.print(_anglePID.GetKi(), 5);
+    Serial.print(_Ki, 5);
     Serial.print(", ");
-    Serial.println(_anglePID.GetKd(), 5);
+    Serial.println(_Kd, 5);
 }
 
 void MainController::updateAngle(){
@@ -69,16 +61,25 @@ void MainController::computeCommand(){
     if(_toStabilize){
 
         updateAngle();
-        double currentTime = millis();
-        double timeChange = double(currentTime - _prevComputeTime)/1000; //Time change in seconds
+
+        unsigned long currentTime = millis();
+        unsigned long timeChange = (currentTime - _prevComputeTime)/1000; //Time change in seconds
 
         if(timeChange > COMPUTE_INTERVAL_ANGLE/1000000){
-            _angVel = (_currentAngle - _prevAngle)/timeChange;
-            _angVelF = _f.filterIn(_angVel);
-            _anglePID.Compute(_angVelF);
+            _angVel = (_currentAngle - _prevAngle)/timeChange;  //Compute angular velocity
+            _angVelF = _f.filterIn(_angVel);                    //Filter velocity
+
+            double error = _targetAngle - _currentAngle;
+            double output;
+
+
+            //Compute PD   
+            output = _Kp * error - _Kd * _angVelF; //output = Kp*Error - Kd*Angular speed
+            _accelOutput = output;
 
             double speedInc = (_accelOutput*RAD_TO_DEG)*timeChange;
             double newSpeed = flywheelMotor.getTargetSpeed() + speedInc;
+
             newSpeed =  newSpeed > MAX_SPEED? MAX_SPEED  : newSpeed;
             newSpeed =  newSpeed < -MAX_SPEED? -MAX_SPEED: newSpeed;
 
@@ -88,10 +89,6 @@ void MainController::computeCommand(){
             _prevAngle = _currentAngle;
         }
     }
-}
-
-void MainController::measureAngVel(){
-
 }
 
 
@@ -106,37 +103,16 @@ double MainController::getAngularVelFiltered(){return _angVelF;}
 
 double MainController::getTargetAccel(){return _accelOutput*RAD_TO_DEG;}
 
-double MainController::getKp(){return _anglePID.GetKp();}
+double MainController::getKp(){return _Kp;}
 
-double MainController::getKi(){return _anglePID.GetKi();}
+double MainController::getKi(){return _Ki;}
 
-double MainController::getKd(){return _anglePID.GetKd();}
+double MainController::getKd(){return _Kd;}
 
 void MainController::setTargetAngle(double newAngle){_targetAngle = newAngle;}
 
+void MainController::setKp(double Kp){_Kp = Kp;}
 
-void MainController::setPID(){ 
-    _anglePID.SetTunings(_Kp, _Ki, _Kd);
-}
+void MainController::setKi(double Ki){_Ki = Ki;}
 
-void MainController::setPID(double Kp, double Ki, double Kd){ 
-    _Kp = Kp;
-    _Ki = Ki;
-    _Kd = Kd;
-    _anglePID.SetTunings(_Kp, _Ki, _Kd);
-}
-
-void MainController::setKp(double Kp){
-    _Kp = Kp;
-    setPID();
-}
-
-void MainController::setKi(double Ki){
-    _Ki = Ki;
-    setPID();
-}
-
-void MainController::setKd(double Kd){
-    _Kd = Kd;
-    setPID();
-}
+void MainController::setKd(double Kd){_Kd = Kd;}
