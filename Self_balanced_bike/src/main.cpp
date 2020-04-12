@@ -89,7 +89,7 @@ void loop() {
 
     //! To go to a specific acceleration
     if(followAccel){
-        if(currentTime - prevTimeAccel < 1500)
+        if(currentTime - prevTimeAccel < 1000)
             goToAccel();
         else{
             Serial.println("Timeout");
@@ -220,6 +220,7 @@ void goToAccel(){
         speedInc = goalAccel*(double(currentTime-prevTime)/1000);
         double newSpeed = flywheelMotor.getTargetSpeed() + speedInc;
         flywheelMotor.setTargetSpeed(newSpeed);
+        flywheelMotor.printMotorData();
         prevTime = currentTime;
         
         // Serial.print("Goal accel: ");

@@ -110,14 +110,14 @@ hold off
 %% Réponse à une Rampe
 clc
 close all
-plotExp = 0;
+plotExp = 1;
 
 if plotExp == true
     load(fullfile("PythonData", 'Moteur_BF_C3_15000'))
     simTime = Time(end);
 end
 
-targetAccel = 5000;
+targetAccel = 15000;
 targetSpeed = 8000;
 sim("Simulink/Moteur_BF_v2")
 

@@ -4,18 +4,16 @@ double Kp_v = -2500;
 double Ki_v = -0;
 double Kd_v = -100;
 
-const float cutoff_freq_speed   = 4;  //Cutoff frequency in Hz
-IIR::ORDER  order_speed  = IIR::ORDER::OD2; // Order (OD1 to OD4)
+const float cutoff_freq_speed   = 21;  //Cutoff frequency in Hz
+IIR::ORDER  order_speed  = IIR::ORDER::OD1; // Order (OD1 to OD4)
 
 const float cutoff_freq_angle   = 10;  //Cutoff frequency in Hz
 IIR::ORDER  order_angle  = IIR::ORDER::OD2; // Order (OD1 to OD4)
 
-const float sampling_time = COMPUTE_INTERVAL_ANGLE/1000000; //Sampling time in seconds.
-
 MainController mainController;
 
-MainController::MainController():_speedFilter(cutoff_freq_speed, sampling_time, order_speed),
-                                 _angleFilter(cutoff_freq_angle, sampling_time, order_angle){
+MainController::MainController():_speedFilter(cutoff_freq_speed, SPEED_MEASURE_INTERVAL/1000, order_speed),
+                                 _angleFilter(cutoff_freq_angle, ANGLE_MEASURE_INTERVAL/1000, order_angle){
     _targetAngle = 0;
     _Kp = Kp_v;
     _Ki = Ki_v;
@@ -106,7 +104,7 @@ void MainController::stabilise(){
         }
 
         if(timeChangeCompute >= COMPUTE_INTERVAL_ANGLE){
-            computeCommand(timeChangeCompute);
+            computeCommand(timeChangeCompute/1000);
             _prevComputeTime = currentTime;
         }
 

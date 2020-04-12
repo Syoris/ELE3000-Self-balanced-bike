@@ -10,14 +10,14 @@ import scipy.io
 serPort = "COM3"
 
 # p = -25
-# KpM = 0.007052  
-# KiM = 0.195357
-# KdM = 0
+KpM = 0.007052  
+KiM = 0.195357
+KdM = 0
 
 # p = -40
-KpM = 0.011740  
-KiM = 0.500114
-KdM = 0 
+# KpM = 0.011740  
+# KiM = 0.500114
+# KdM = 0 
 
 
 KpV = -2650
@@ -73,6 +73,7 @@ class SerialDataClass:
             "run" : self.readSerialData,
             "r" : self.readSerialData,
             "show" : self.showData,
+            "s" : self.showData,
             "load" : self.loadData,
             "save" : self.saveData,
             "setSpeed" : self.setTargetSpeed,
@@ -104,7 +105,7 @@ class SerialDataClass:
         # axY.plot(x, self.data["FW_Target_Accel"], 'c', label="Target Accel [deg/s**2]" )
         
         axs[0].plot(x, self.data["FW_Speed"], 'b', label="FW Speed [deg/s]" )
-        if(showRaw) : axs[0].plot(x, self.data["FW_Speed_Raw"], 'b:', label="FW Raw speed [deg/s]" )
+        if(showRaw) : axs[0].plot(x, self.data["FW_Speed_Raw"], 'y:', label="FW Raw speed [deg/s]" )
         
         # axs[0].plot(x, self.data["FW_Angle"], 'g', label="FW Angle [deg]")
         # if(showRaw) : axs[0].plot(x, self.data["FW_Angle_Raw"], 'y', label="FW Raw Angle [deg]" )
@@ -119,13 +120,13 @@ class SerialDataClass:
         # Plot 2: Bike
         axY = axs[1].twinx()
 
-        # axs[1].plot(x, self.data["FW_Command"], 'k', label="Commande [V]")
+        axs[1].plot(x, self.data["FW_Command"], 'k', label="Commande [V]")
 
-        axs[1].plot(x, self.data["Bike_Angle"], 'g', label="Bike angle [deg]")
-        if(showRaw) : axs[1].plot(x, self.data["Bike_Angle_Raw"], 'y:', label="Bike angle, raw[deg]")
+        # axs[1].plot(x, self.data["Bike_Angle"], 'g', label="Bike angle [deg]")
+        # if(showRaw) : axs[1].plot(x, self.data["Bike_Angle_Raw"], 'y:', label="Bike angle, raw[deg]")
 
-        axY.plot(x, self.data["Bike_AngularVel"], 'c', label="Angular Velocity [deg/sec]")
-        if(showRaw) : axY.plot(x, self.data["Bike_AngularVel_Raw"], 'm:', label="Angular Velocity, raw [deg/sec]")
+        # axY.plot(x, self.data["Bike_AngularVel"], 'c', label="Angular Velocity [deg/sec]")
+        # if(showRaw) : axY.plot(x, self.data["Bike_AngularVel_Raw"], 'm:', label="Angular Velocity, raw [deg/sec]")
 
         axs[1].set_xlim(xmin=0)
         axs[1].legend()

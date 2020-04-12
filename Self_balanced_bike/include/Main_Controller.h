@@ -9,7 +9,7 @@
 #define COMPUTE_INTERVAL_ANGLE 35.0 //Interval to compute PID for speed control (in mS)
 #define SPEED_MEASURE_INTERVAL 5.0 //Interval to compute PID for speed control (in mS)
 #define ANGLE_MEASURE_INTERVAL 1.0 //Interval to compute PID for speed control (in mS)
-#define SEND_DATA_INTERVAL 30.0 //Interval to compute PID for speed control (in mS)
+#define SEND_DATA_INTERVAL 10.0 //Interval to compute PID for speed control (in mS)
 
 #define ZERO_OFFSET 2.6*DEG_TO_RAD
 

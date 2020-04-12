@@ -12,10 +12,8 @@ double Kp_m = 0.011740;
 double Ki_m = 0.500114;
 double Kd_m = 0;
 
-const float cutoff_freq_motor_speed   = 8;  //Cutoff frequency in Hz
+const float cutoff_freq_motor_speed   = 15;  //Cutoff frequency in Hz
 IIR::ORDER  order_motor_speed  = IIR::ORDER::OD1; // Order (OD1 to OD4)
-
-const float sampling_time_motor = COMPUTE_INTERVAL_ANGLE/1000000; //Sampling time in seconds.
 
 static void measureSpeedTimer(){
     flywheelMotor.measureSpeed();
@@ -31,7 +29,7 @@ FlywheelMotor flywheelMotor;
 FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2), 
                                 _speedMeasureTimer(),
                                 _speedComputeTimer(),
-                                _speedFilter(cutoff_freq_motor_speed, sampling_time_motor, order_motor_speed){
+                                _speedFilter(cutoff_freq_motor_speed, SPEED_INTERVAL/1000000, order_motor_speed){
     _prevAngle = 0;
     _currentAngle = 0;
     _targetSpeed = 5000;
