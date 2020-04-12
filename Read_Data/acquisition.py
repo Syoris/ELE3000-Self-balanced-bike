@@ -95,43 +95,52 @@ class SerialDataClass:
         # To show the data
         x = self.data["Time"]
 
-        # Plot
+        # Plot 1: Flywheel
         fig, axs = plt.subplots(2, sharex=True)
         fig.suptitle(self.data_name)
         axY = axs[0].twinx()
-        axs[0].plot(x, self.data["FW_Target_Speed"], 'r', label="Target speed [deg/s]")
-        axs[0].plot(x, self.data["FW_Speed"], 'b', label="Current speed [deg/s]" )
+        
+        axs[0].plot(x, self.data["FW_Target_Speed"], 'b--', label="Target speed [deg/s]")
         # axY.plot(x, self.data["FW_Target_Accel"], 'c', label="Target Accel [deg/s**2]" )
-        if(showRaw) : axs[0].plot(x, self.data["FW_Speed_Raw"], 'y', label="Raw speed [deg/s]" )
-        axs[0].plot(x, self.data["FW_Angle"], 'g', label="Angle [deg]")
+        
+        axs[0].plot(x, self.data["FW_Speed"], 'b', label="FW Speed [deg/s]" )
+        if(showRaw) : axs[0].plot(x, self.data["FW_Speed_Raw"], 'b:', label="FW Raw speed [deg/s]" )
+        
+        # axs[0].plot(x, self.data["FW_Angle"], 'g', label="FW Angle [deg]")
+        # if(showRaw) : axs[0].plot(x, self.data["FW_Angle_Raw"], 'y', label="FW Raw Angle [deg]" )
+        
         axs[0].legend()
         axs[0].grid(True, which='both')
         axs[0].axhline(y=0, color='k', linestyle='dashed')
         # axY.axhline(y=0, color='c', linestyle = 'dashed')
-
-        axs[0].axvline(x=0, color='k')
         axs[0].set_xlim(xmin=0)
 
-        axY = axs[1].twinx()
-        # axs[1].plot(x, self.data["BikeAngle"], 'g', label="Bike angle [deg]")
-        axs[1].plot(x, self.data["FW_Command"], 'k', label="Commande [V]")
-        # axY.plot(x, self.data["AngularVel"], 'c', label="Angular Velocity [deg/sec]")
-        # if(showRaw) : axY.plot(x, self.data["AngularVelRaw"], 'y', label="Raw Angular Velocity [deg/sec]")
 
+        # Plot 2: Bike
+        axY = axs[1].twinx()
+
+        # axs[1].plot(x, self.data["FW_Command"], 'k', label="Commande [V]")
+
+        axs[1].plot(x, self.data["Bike_Angle"], 'g', label="Bike angle [deg]")
+        if(showRaw) : axs[1].plot(x, self.data["Bike_Angle_Raw"], 'y:', label="Bike angle, raw[deg]")
+
+        axY.plot(x, self.data["Bike_AngularVel"], 'c', label="Angular Velocity [deg/sec]")
+        if(showRaw) : axY.plot(x, self.data["Bike_AngularVel_Raw"], 'm:', label="Angular Velocity, raw [deg/sec]")
+
+        axs[1].set_xlim(xmin=0)
+        axs[1].legend()
+        axY.legend()
         
         axY.set_ylabel("Angular Velocity [deg/sec]", color='c')
-        axs[1].set_ylabel("Angular Position [deg]", color='g')
-
         axY.tick_params(axis='y', labelcolor = 'c')
+        axs[1].set_ylabel("Angular Position [deg]", color='g')
         axs[1].tick_params(axis='y', labelcolor = 'g')
 
         axY.grid(True, which='both')
         axs[1].grid(True, which='both')
 
         axs[1].axhline(y=0, color='g', linestyle = 'dashed')
-        axY.axhline(y=0, color='c', linestyle = 'dashed')
-        axs[1].axvline(x=0, color='k')
-        axs[1].set_xlim(xmin=0)
+        axY.axhline(y=0, color='c', linestyle = 'dashed')        
 
         fig.tight_layout()
         plt.xlabel('Temps (sec)')

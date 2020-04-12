@@ -6,7 +6,11 @@
 #include <Motor_Controller.h>
 #include <filters.h>
 
-#define COMPUTE_INTERVAL_ANGLE 15000.0 //Interval to compute PID for speed control (in uS)
+#define COMPUTE_INTERVAL_ANGLE 35.0 //Interval to compute PID for speed control (in mS)
+#define SPEED_MEASURE_INTERVAL 5.0 //Interval to compute PID for speed control (in mS)
+#define ANGLE_MEASURE_INTERVAL 1.0 //Interval to compute PID for speed control (in mS)
+#define SEND_DATA_INTERVAL 30.0 //Interval to compute PID for speed control (in mS)
+
 #define ZERO_OFFSET 2.6*DEG_TO_RAD
 
 class MainController{
@@ -24,6 +28,9 @@ class MainController{
         double _prevAngVel;
 
         unsigned long _prevComputeTime;
+        unsigned long _prevSpeedTime;
+        unsigned long _prevAngleTime;
+        unsigned long _prevPrintTime;
         
         // PID variables
         double _accelOutput;    //Target speed of flywheel
@@ -33,7 +40,8 @@ class MainController{
         bool _imuRdy = false;
 
         // Filtre
-        Filter _f;
+        Filter _speedFilter;
+        Filter _angleFilter;
     
     public:
         MainController();
@@ -42,7 +50,9 @@ class MainController{
         void stopController();
 
         void updateAngle();
-        void computeCommand();
+        void measureSpeed(double timeInt);
+        void computeCommand(double timeInt);
+        void stabilise();
 
         //! Interface
         double getAngle();

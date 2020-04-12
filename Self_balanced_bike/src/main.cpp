@@ -106,7 +106,7 @@ void loop() {
 
     //! To stabilize the bike
     if(toStabilise){
-        mainController.computeCommand();
+        mainController.stabilise();
     }
     
     if(toCheckAngle){

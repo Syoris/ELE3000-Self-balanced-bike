@@ -25,9 +25,10 @@
 #define COUNT_TO_ANGLE 360.0/(GEARBOX_RATIO*COUNT_PER_TURN)
 #define USEC_TO_SEC 1000000.0
 #define V_TO_PWM 256/6
+#define SEC_SPEED USEC_TO_SEC / SPEED_INTERVAL
 
 #define SPEED_INTERVAL 10000.0 //Interval to measure speed (in uS)
-#define COMPUTE_INTERVAL 10000.0 //Interval to compute PID for speed control (in uS)
+#define COMPUTE_INTERVAL 30000.0 //Interval to compute PID for speed control (in uS)
 
 class FlywheelMotor{
     private:
@@ -56,7 +57,7 @@ class FlywheelMotor{
         bool _printTextData = false;    //For debugging
 
         //Filtre
-        Filter _f;
+        Filter _speedFilter;
 
     public:
         FlywheelMotor();

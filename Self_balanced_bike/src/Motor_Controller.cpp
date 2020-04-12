@@ -1,5 +1,7 @@
 #include "Motor_Controller.h"
 
+bool toPrint = true; 
+
 // double Kp_m = 0.003812;
 // double Ki_m = 0.228711;
 // double Kd_m = -0.000111;
@@ -10,9 +12,10 @@ double Kp_m = 0.011740;
 double Ki_m = 0.500114;
 double Kd_m = 0;
 
-const float cutoff_freq_motor   = 8;  //Cutoff frequency in Hz
+const float cutoff_freq_motor_speed   = 8;  //Cutoff frequency in Hz
+IIR::ORDER  order_motor_speed  = IIR::ORDER::OD1; // Order (OD1 to OD4)
+
 const float sampling_time_motor = COMPUTE_INTERVAL_ANGLE/1000000; //Sampling time in seconds.
-IIR::ORDER  order_motor  = IIR::ORDER::OD1; // Order (OD1 to OD4)
 
 static void measureSpeedTimer(){
     flywheelMotor.measureSpeed();
@@ -28,7 +31,7 @@ FlywheelMotor flywheelMotor;
 FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2), 
                                 _speedMeasureTimer(),
                                 _speedComputeTimer(),
-                                _f(cutoff_freq_motor, sampling_time_motor, order_motor){
+                                _speedFilter(cutoff_freq_motor_speed, sampling_time_motor, order_motor_speed){
     _prevAngle = 0;
     _currentAngle = 0;
     _targetSpeed = 5000;
@@ -46,13 +49,18 @@ FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2),
 }
 
 void FlywheelMotor::startMotor(){
-    _f.flush();
+    _speedFilter.flush();
+
+    // Reset motor parameters
     _speed = 0;
+    _speedRaw = 0;
+
     _motor_enc.write(0);
     _prevAngle = 0;
-    _currentAngle = 0;
-    _speed = 0;
+    _currentAngleRaw = 0;
+
     _outputSum = 0;
+
     flywheelMotor.computeCommand();
     _speedComputeTimer.begin(computeSpeedTimer, COMPUTE_INTERVAL);
     _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
@@ -80,12 +88,12 @@ double FlywheelMotor::readAngle(){
 
 //Calculate motor speed
 void FlywheelMotor::measureSpeed(){    
-    _prevAngle = _currentAngle;
-    _currentAngle = readAngle();
+    _prevAngle = _currentAngleRaw;
+    _currentAngleRaw = readAngle();
+    _currentAngle = _currentAngleRaw;
 
-
-    _speedRaw = ((_currentAngle - _prevAngle) * USEC_TO_SEC) / SPEED_INTERVAL;
-    _speed = _f.filterIn(_speedRaw);
+    _speedRaw = (_currentAngleRaw - _prevAngle) * SEC_SPEED;    // Derivative of angle
+    _speed = _speedFilter.filterIn(_speedRaw);
 
     if(DEBUG_MOTOR){
         Serial.print("Delta angle: ");
@@ -122,7 +130,7 @@ void FlywheelMotor::setMotorSpeed(int speed){
     }
 }
 
-//Set speed of the flywheel with PID, if targetSpeed < 0 => CCW
+//Set speed of the flywheel with PID
 void FlywheelMotor::computeCommand(){
     double error = _targetSpeed - _speed;
     double output;
@@ -136,23 +144,9 @@ void FlywheelMotor::computeCommand(){
 
     _speedCommand = output;
 
-    printMotorData();
-
     double pwmVal = _speedCommand*V_TO_PWM;
     setMotorSpeed(pwmVal);
-
-    // Serial.print("Speed: ");
-    // Serial.print(_speedF);
-    // Serial.print("\tError: ");
-    // Serial.print(error);
-    // Serial.print("\t OutputSum: ");
-    // Serial.print(_outputSum);
-    // Serial.print("\t -Kp*speed: ");
-    // Serial.print(-_Kp * _speedF);
-    // Serial.print("\t Tension: ");
-    // Serial.println(output);
 }
-
 
 // To measure step reponse
 void FlywheelMotor::stepReponse(double stepAmplitude){
