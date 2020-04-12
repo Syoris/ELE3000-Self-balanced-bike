@@ -6,7 +6,6 @@ matplotlib.use('TkAgg')
 from matplotlib import pyplot as plt
 import time
 import scipy.io
-
 serPort = "COM3"
 
 # p = -25
@@ -20,9 +19,9 @@ KdM = 0
 # KdM = 0 
 
 
-KpV = -2650
+KpV = -4000
 KiV = -0
-KdV = -50
+KdV = -255
 
 # Essai 1
 # Kpv = -2175
@@ -120,13 +119,13 @@ class SerialDataClass:
         # Plot 2: Bike
         axY = axs[1].twinx()
 
-        axs[1].plot(x, self.data["FW_Command"], 'k', label="Commande [V]")
+        # axs[1].plot(x, self.data["FW_Command"], 'k', label="Commande [V]")
 
-        # axs[1].plot(x, self.data["Bike_Angle"], 'g', label="Bike angle [deg]")
-        # if(showRaw) : axs[1].plot(x, self.data["Bike_Angle_Raw"], 'y:', label="Bike angle, raw[deg]")
+        axs[1].plot(x, self.data["Bike_Angle"], 'g', label="Bike angle [deg]")
+        if(showRaw) : axs[1].plot(x, self.data["Bike_Angle_Raw"], 'y:', label="Bike angle, raw[deg]")
 
-        # axY.plot(x, self.data["Bike_AngularVel"], 'c', label="Angular Velocity [deg/sec]")
-        # if(showRaw) : axY.plot(x, self.data["Bike_AngularVel_Raw"], 'm:', label="Angular Velocity, raw [deg/sec]")
+        axY.plot(x, self.data["Bike_AngularVel"], 'c', label="Angular Velocity [deg/sec]")
+        if(showRaw) : axY.plot(x, self.data["Bike_AngularVel_Raw"], 'm:', label="Angular Velocity, raw [deg/sec]")
 
         axs[1].set_xlim(xmin=0)
         axs[1].legend()
@@ -251,8 +250,26 @@ class SerialDataClass:
         sub_val = self.data["Time"][0]
         self.data["Time"] = [(x - sub_val)/1000 for x in self.data["Time"]]
 
-        print("Angle inital: ", self.data["Bike_Angle"][0])
-        if(self.data["Bike_Angle"][0] > 7 or self.data["Bike_Angle"][0] < 6): print("!!!ALERTE!!!")
+        if input_type == "stabilize":
+            # Check starting angle
+            startAngle = self.data["Bike_Angle"][0]
+            print("Angle inital: ", startAngle)
+            if(startAngle > 7 or startAngle < 6): print("!!!ALERTE!!!")
+
+            # Find stabilizing time
+            angleThres = 5
+            startTime = 0
+            stable = False
+            for angle, time in zip(self.data["Bike_Angle"], self.data["Time"]):
+                if abs(angle) <= angleThres and not stable:
+                    startTime = time
+                    stable = True
+                if(stable and abs(angle) >= angleThres):
+                    endTime = time
+                    stable = False
+            print("Start Time: ", startTime)
+            print("End Time: ", endTime)
+            print("Stable Time: ", endTime - startTime)
 
     def saveData(self):
         self.data_name = input("Enter save name: ")

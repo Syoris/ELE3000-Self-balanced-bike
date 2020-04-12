@@ -6,7 +6,7 @@
 #include <Motor_Controller.h>
 #include <filters.h>
 
-#define COMPUTE_INTERVAL_ANGLE 35.0 //Interval to compute PID for speed control (in mS)
+#define COMPUTE_INTERVAL_ANGLE 10.0 //Interval to compute PID for speed control (in mS)
 #define SPEED_MEASURE_INTERVAL 5.0 //Interval to compute PID for speed control (in mS)
 #define ANGLE_MEASURE_INTERVAL 1.0 //Interval to compute PID for speed control (in mS)
 #define SEND_DATA_INTERVAL 10.0 //Interval to compute PID for speed control (in mS)
