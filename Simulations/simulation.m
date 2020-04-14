@@ -8,7 +8,7 @@ Lv = 4.8/100;                  %Distance sol-CM [m]
 Jv_cm = 371561.95/(1000^3);     %Inertie du vélo [Kg*m^2]
 Jv = Jv_cm + Mv*Lv^2;
 Jvi = Jv;
-% Jv = 0.0003;
+Jv = 0.0003;
 
 
 %Roue inertielle

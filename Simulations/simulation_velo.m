@@ -317,8 +317,9 @@ fprintf("\tAccel max [deg/sec]: %6.2f\n", max(abs(Phi_dot_dot_des(:, 2))))
 clc
 close all
 
-n1 = "03";
-n2 = "05";
+n1 = "07";
+n2 = "08";
+nData = 100;
 
 % Plot results
 figure
@@ -327,9 +328,9 @@ suptitle("Vélo Complet")
 subplot(2, 1, 1)
 hold on
 load(fullfile("PythonData", 'Velo_Exp_'+n1))
-plot(Time, BikeAngle, 'r', 'DisplayName', 'Angle Exp 1')
+plot(Time(1:nData), Bike_Angle(1:nData), 'r', 'DisplayName', 'Angle Exp 1')
 load(fullfile("PythonData", 'Velo_Exp_'+n2))
-plot(Time, BikeAngle, 'b', 'DisplayName', 'Angle Exp 2')
+plot(Time(1:nData), Bike_Angle(1:nData), 'b', 'DisplayName', 'Angle Exp 2')
 legend
 title("Position")
 xlabel("Temps (sec)")
@@ -342,11 +343,11 @@ subplot(2, 1, 2)
 hold on
 %   Exp data
 load(fullfile("PythonData", 'Velo_Exp_'+n1))
-plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Vitesse (exp 1 )')
-plot(Time, TargetSpeed, 'r--', 'DisplayName', 'Vitesse désirée (exp 1)')
+plot(Time(1:nData), FW_Speed(1:nData), 'r', 'DisplayName', 'Vitesse (exp 1 )')
+plot(Time(1:nData), FW_Target_Speed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (exp 1)')
 load(fullfile("PythonData", 'Velo_Exp_'+n2))
-plot(Time, CurrentSpeed, 'b', 'DisplayName', 'Vitesse (exp 1 )')
-plot(Time, TargetSpeed, 'b--', 'DisplayName', 'Vitesse désirée (exp 1)')
+plot(Time(1:nData), FW_Speed(1:nData), 'b', 'DisplayName', 'Vitesse (exp 1 )')
+plot(Time(1:nData), FW_Target_Speed(1:nData), 'b--', 'DisplayName', 'Vitesse désirée (exp 1)')
 legend
 title("Vitesse")
 xlabel("Temps (sec)")
@@ -354,3 +355,51 @@ ylabel("Vitessse [deg/sec]")
 grid on
 hold off
 
+
+%% Comparaison expérimental, théorique
+clc
+close all
+
+n = "11";
+nData = 400;
+load(fullfile("PythonData", 'Velo_Exp_'+n))
+
+Kp_v = -4300;
+Ki_v = 0;
+Kd_v = -320;
+
+AngleInitial = Bike_Angle(1);
+simTime = Time(nData);
+sim("Simulink/Velo_Complet_BF")
+
+% Plot results
+figure
+suptitle("Vélo Complet")
+% Angle
+subplot(2, 1, 1)
+hold on
+plot(Time(1:nData), Bike_Angle(1:nData), 'r', 'DisplayName', 'Angle Exp 1')
+plot(Theta_BF(:, 1), Theta_BF(:, 2), 'b', 'DisplayName', 'Théorique')
+legend
+title("Position")
+xlabel("Temps (sec)")
+ylabel("Angle [deg]")
+grid on
+hold off
+
+% Vitesse flywheel
+subplot(2, 1, 2)
+hold on
+%   Exp data
+plot(Time(1:nData), FW_Speed(1:nData), 'r', 'DisplayName', 'Vitesse (exp 1 )')
+plot(Time(1:nData), FW_Target_Speed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (exp 1)')
+
+plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Vitesse actuelle (theo)')
+plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'b--', 'DisplayName', 'Vitesse désirée (theo)')
+
+legend
+title("Vitesse")
+xlabel("Temps (sec)")
+ylabel("Vitessse [deg/sec]")
+grid on
+hold off

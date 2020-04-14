@@ -3,13 +3,27 @@ Code pour le vélo autoéquilibré pour mon projet dans le cadre du cours ELE300
 
 ## Tâches à faire
 - [x] Identifier le moteur
-- [] Simulations
+- [x] Simulations
     - [x] Contrôleur du moteur
-    - [] Contrôleur du vélo
+    - [x] Contrôleur du vélo
 - [] Déterminer la fréquence du système
 - [x] Code embarqué
   - [x] Contrôleur en accélération
   - [x] Contrôleur de l'angle
+
+## Contrôleurs
+### PD
+
+
+|Contrôleur |-Kp    |-Kd    |Temps max| Angle max| Perturbation|
+|:---------:|:-----:|:-----:|:-------:|:--------:|:-----------:|
+|    C1     | 4000  |  255  |    x    |    x     |      x      |
+|    C2     | 4800  |  549  |    x    |    x     |      x      |
+|    C3     | 4300  |  320  |    15   |   7.5    |      4      |
+|    C4     | 4500  |  312  |    10   |   7.5    |      1      |
+|    C5     | 2700  |  20.5 |    10   |   7.5    |      x      |
+|    C6     | 3500  |  125  |    10   |   7.5    |      5      |
+
 
 
 ## Code embarqué
@@ -46,6 +60,6 @@ Code pour le vélo autoéquilibré pour mon projet dans le cadre du cours ELE300
   - Change Kx of bike
 - setKxM newValue
   - Change Kx of motor
-  
 
+  
 ## Télécommande infrarouge

@@ -11,11 +11,12 @@
 #define ANGLE_MEASURE_INTERVAL 1.0 //Interval to compute PID for speed control (in mS)
 #define SEND_DATA_INTERVAL 10.0 //Interval to compute PID for speed control (in mS)
 
-#define ZERO_OFFSET 2.6*DEG_TO_RAD
+#define ZERO_OFFSET 2.9*DEG_TO_RAD
 
 class MainController{
     private:
         // Bike angle
+        float _zeroOffset;
         double _currentAngle;
         double _currentAngleRaw;
         double _prevAngle;
@@ -35,6 +36,7 @@ class MainController{
         // PID variables
         double _accelOutput;    //Target speed of flywheel
         double _Kp, _Ki, _Kd;
+        double _outputSum;
 
         bool _toStabilize = false;
         bool _imuRdy = false;
@@ -61,12 +63,14 @@ class MainController{
         double getAngularVelRaw();
         double getTargetAngle();
         double getTargetAccel();
+        float getZeroOffset();
 
         double getKp();
         double getKi();
         double getKd();
 
         void setTargetAngle(double newAngle);
+        void setZeroOffset(float newOffset);
         void setKp(double Kp);
         void setKi(double Ki);
         void setKd(double Kd);

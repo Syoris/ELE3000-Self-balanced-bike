@@ -1,8 +1,8 @@
 #include "Main_Controller.h"
 
-double Kp_v = -2500;
+double Kp_v = -4300;
 double Ki_v = -0;
-double Kd_v = -100;
+double Kd_v = -320;
 
 const float cutoff_freq_speed   = 21;  //Cutoff frequency in Hz
 IIR::ORDER  order_speed  = IIR::ORDER::OD1; // Order (OD1 to OD4)
@@ -19,7 +19,10 @@ MainController::MainController():_speedFilter(cutoff_freq_speed, SPEED_MEASURE_I
     _Ki = Ki_v;
     _Kd = Kd_v;
 
+    _zeroOffset = ZERO_OFFSET;
+
     _imuRdy = IMU_Setup();
+
 }
 
 void MainController::startController(){
@@ -30,6 +33,7 @@ void MainController::startController(){
     _angVel = 0;
     _angVelRaw = 0;
     _prevAngVel = 0;
+    _outputSum = 0;
 
     unsigned int curTime = millis();
     while(millis() - curTime < 250)
@@ -60,7 +64,7 @@ void MainController::updateAngle(){
     if (!_imuRdy) return; //Check IMU is working
 
     IMU_Compute(_ypr);
-    _currentAngle = _ypr[1] + ZERO_OFFSET; // to correct sensor
+    _currentAngle = _ypr[1] + _zeroOffset; // to correct sensor
 }
 
 void MainController::measureSpeed(double timeInt){
@@ -73,8 +77,9 @@ void MainController::computeCommand(double timeInt){
     double error = _targetAngle - _currentAngle;
     double output;
 
-    //Compute PD   
-    output = _Kp * error - _Kd * _angVel; //output = Kp*Error - Kd*Angular speed
+    //Compute PID
+    _outputSum += _Ki * error * timeInt;   
+    output = _Kp * error + _outputSum - _Kd * _angVel; //output = Kp*Error - Kd*Angular speed
     _accelOutput = output;
 
     double speedInc = (_accelOutput*RAD_TO_DEG)*timeInt;
@@ -129,6 +134,8 @@ double MainController::getTargetAngle(){return _targetAngle;}
 
 double MainController::getTargetAccel(){return _accelOutput*RAD_TO_DEG;}
 
+float MainController::getZeroOffset(){return _zeroOffset*RAD_TO_DEG;}
+
 double MainController::getKp(){return _Kp;}
 
 double MainController::getKi(){return _Ki;}
@@ -142,3 +149,6 @@ void MainController::setKp(double Kp){_Kp = Kp;}
 void MainController::setKi(double Ki){_Ki = Ki;}
 
 void MainController::setKd(double Kd){_Kd = Kd;}
+
+//Add offset to current offset
+void MainController::setZeroOffset(float newOffset){ _zeroOffset += newOffset*DEG_TO_RAD;}

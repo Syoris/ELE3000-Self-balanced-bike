@@ -83,7 +83,7 @@ void loop() {
     //! Read Serial Input
     if(currentTime - prevTimeCommand > IR_INTERVAL){
         prevTimeCommand = currentTime;
-        //readRemote();
+        readRemote();
 	    readSerial();
     }
 
@@ -346,6 +346,13 @@ void readSerial(){
                 Serial.println(flywheelMotor.getKd(), 5);
             }
             
+            else if(commande.startsWith("setOffset")){
+                float newOffset = atof(commande.substring(10).c_str());
+                mainController.setZeroOffset(newOffset);
+                Serial.print("New Offset: ");
+                Serial.println(mainController.getZeroOffset());
+            }
+
             else
                 Serial.println("Input invalid");
 

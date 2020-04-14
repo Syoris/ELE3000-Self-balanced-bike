@@ -9,23 +9,20 @@ import scipy.io
 serPort = "COM3"
 
 # p = -25
-KpM = 0.007052  
-KiM = 0.195357
-KdM = 0
+# KpM = 0.007052  
+# KiM = 0.195357
+# KdM = 0
 
 # p = -40
-# KpM = 0.011740  
-# KiM = 0.500114
-# KdM = 0 
+KpM = 0.011740  
+KiM = 0.500114
+KdM = 0 
 
 
-KpV = -4000
+KpV = -4300
 KiV = -0
-KdV = -255
+KdV = -320
 
-# Essai 1
-# Kpv = -2175
-# Kdv = -432
 
 class SerialDataClass:
     def __init__(self):
@@ -82,15 +79,17 @@ class SerialDataClass:
             "p" : self.setKpV,
             "i" : self.setKiV,
             "d" : self.setKdV,
+            "gains": self.dispGains,
             "step" : self.step,
             "idParam": self.parameterIdentification,
             "angle": self.checkAngle,
+            "setOffset": self.setOffset,
             "help" : self.print_help,
             "exit" : self.stop
         }
 
     def showData(self):
-        showRaw = True
+        showRaw = False
 
         # To show the data
         x = self.data["Time"]
@@ -124,12 +123,12 @@ class SerialDataClass:
         axs[1].plot(x, self.data["Bike_Angle"], 'g', label="Bike angle [deg]")
         if(showRaw) : axs[1].plot(x, self.data["Bike_Angle_Raw"], 'y:', label="Bike angle, raw[deg]")
 
-        axY.plot(x, self.data["Bike_AngularVel"], 'c', label="Angular Velocity [deg/sec]")
+        # axY.plot(x, self.data["Bike_AngularVel"], 'c', label="Angular Velocity [deg/sec]")
         if(showRaw) : axY.plot(x, self.data["Bike_AngularVel_Raw"], 'm:', label="Angular Velocity, raw [deg/sec]")
 
         axs[1].set_xlim(xmin=0)
-        axs[1].legend()
-        axY.legend()
+        axs[1].legend(loc= 'upper right')
+        axY.legend(loc= 'lower right')
         
         axY.set_ylabel("Angular Velocity [deg/sec]", color='c')
         axY.tick_params(axis='y', labelcolor = 'c')
@@ -254,11 +253,12 @@ class SerialDataClass:
             # Check starting angle
             startAngle = self.data["Bike_Angle"][0]
             print("Angle inital: ", startAngle)
-            if(startAngle > 7 or startAngle < 6): print("!!!ALERTE!!!")
+            # if(startAngle > 7 or startAngle < 6): print("!!!ALERTE!!!")
 
             # Find stabilizing time
             angleThres = 5
             startTime = 0
+            endTime = 0
             stable = False
             for angle, time in zip(self.data["Bike_Angle"], self.data["Time"]):
                 if abs(angle) <= angleThres and not stable:
@@ -538,6 +538,21 @@ class SerialDataClass:
             plt.show()
             plt.title("Parameter identification")
 
+    def setOffset(self, offset):
+        self.ser.flushInput()
+        self.ser.flushOutput()
+        commande = "#setOffset " + str(offset) + " "
+        self.ser.write(commande.encode())
+        self.ser.readline().decode('utf-8')
+        serialData2 = self.ser.readline().decode('utf-8')
+        print(serialData2, end='')
+
+    def dispGains(self):
+        print("Gains du moteur")
+        print("Kp:", self.KpM, "\tKi:", self.KiM, "\tKd:", self.KdM )
+
+        print("Gains du vélo")
+        print("Kp:", self.KpV, "\tKi:", self.KiV, "\tKd:", self.KdV )
 
 def main():
     serData = SerialDataClass()
