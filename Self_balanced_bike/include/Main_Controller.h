@@ -12,6 +12,7 @@
 #define SEND_DATA_INTERVAL 10.0 //Interval to compute PID for speed control (in mS)
 
 #define ZERO_OFFSET 2.9*DEG_TO_RAD
+#define DEAD_ZONE   0.25*DEG_TO_RAD
 
 class MainController{
     private:
@@ -37,6 +38,7 @@ class MainController{
         double _accelOutput;    //Target speed of flywheel
         double _Kp, _Ki, _Kd;
         double _outputSum;
+        double _deadZone;
 
         bool _toStabilize = false;
         bool _imuRdy = false;
@@ -64,6 +66,7 @@ class MainController{
         double getTargetAngle();
         double getTargetAccel();
         float getZeroOffset();
+        double getDeadZone();
 
         double getKp();
         double getKi();
@@ -71,6 +74,7 @@ class MainController{
 
         void setTargetAngle(double newAngle);
         void setZeroOffset(float newOffset);
+        void setDeadZone(double newDeadZone);
         void setKp(double Kp);
         void setKi(double Ki);
         void setKd(double Kd);

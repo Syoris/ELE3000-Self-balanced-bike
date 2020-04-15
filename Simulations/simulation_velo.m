@@ -200,7 +200,7 @@ B = (Mv*Lv + Mr*Lr)*g;
 % C1: p =
 % C2: p =
 
-p = 5;
+p = 8;
 
 syms Kps Kds
 
@@ -245,7 +245,7 @@ if plotExp == true
     AngleInitial = BikeAngle(1);
 else
     simTime = 2;
-    AngleInitial = 7.5;
+    AngleInitial = 8;
 end
 
 

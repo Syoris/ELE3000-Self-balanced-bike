@@ -10,6 +10,8 @@ Jv = Jv_cm + Mv*Lv^2;
 Jvi = Jv;
 Jv = 0.0003;
 
+disp("Jv: ")
+disp(Jv)
 
 %Roue inertielle
 Mp = 17/1000;         %Masse de la roue en plastique [kg]
@@ -34,6 +36,11 @@ Jr5 = 0.0000855;
 Jr6 = 0.000083;
 Jr_exp = mean([Jr2 Jr3 Jr4 Jr5 Jr6]);
 % Jr = Jr_exp;
+Jr = 1.485e-04;
+
+disp("Jr: ")
+disp(Jr)
+
 
 %Moteur
 

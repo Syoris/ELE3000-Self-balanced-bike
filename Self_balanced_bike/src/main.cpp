@@ -352,6 +352,13 @@ void readSerial(){
                 Serial.print("New Offset: ");
                 Serial.println(mainController.getZeroOffset());
             }
+            
+            else if(commande.startsWith("setDeadZone")){
+                double newDeadZone = atof(commande.substring(12).c_str());
+                mainController.setDeadZone(newDeadZone);
+                Serial.print("New DeadZone: ");
+                Serial.println(mainController.getDeadZone());
+            }
 
             else
                 Serial.println("Input invalid");

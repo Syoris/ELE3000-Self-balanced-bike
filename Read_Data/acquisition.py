@@ -83,7 +83,8 @@ class SerialDataClass:
             "step" : self.step,
             "idParam": self.parameterIdentification,
             "angle": self.checkAngle,
-            "setOffset": self.setOffset,
+            "offset": self.setOffset,
+            "deadZone": self.setDeadZone,
             "help" : self.print_help,
             "exit" : self.stop
         }
@@ -542,6 +543,15 @@ class SerialDataClass:
         self.ser.flushInput()
         self.ser.flushOutput()
         commande = "#setOffset " + str(offset) + " "
+        self.ser.write(commande.encode())
+        self.ser.readline().decode('utf-8')
+        serialData2 = self.ser.readline().decode('utf-8')
+        print(serialData2, end='')
+
+    def setDeadZone(self, deadZone):
+        self.ser.flushInput()
+        self.ser.flushOutput()
+        commande = "#setDeadZone " + str(deadZone) + " "
         self.ser.write(commande.encode())
         self.ser.readline().decode('utf-8')
         serialData2 = self.ser.readline().decode('utf-8')

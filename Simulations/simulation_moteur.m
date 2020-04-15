@@ -3,7 +3,7 @@
 %% Step Response 6V
 clc
 close all
-load(fullfile("PythonData", 'step6V_25'))
+load(fullfile("PythonData", 'step6V'))
 simTime = Time(end);
 stepVal = str2double(StepAmplitude);
 sim("Simulink/Moteur_BO")
