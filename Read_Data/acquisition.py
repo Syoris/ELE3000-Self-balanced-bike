@@ -4,7 +4,7 @@ import os
 import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib import pyplot as plt
-import time
+# import time as t
 import scipy.io
 serPort = "COM3"
 
@@ -117,7 +117,7 @@ class SerialDataClass:
 
 
         # Plot 2: Bike
-        axY = axs[1].twinx()
+        # axY = axs[1].twinx()
 
         # axs[1].plot(x, self.data["FW_Command"], 'k', label="Commande [V]")
 
@@ -129,18 +129,18 @@ class SerialDataClass:
 
         axs[1].set_xlim(xmin=0)
         axs[1].legend(loc= 'upper right')
-        axY.legend(loc= 'lower right')
+        # axY.legend(loc= 'lower right')
         
-        axY.set_ylabel("Angular Velocity [deg/sec]", color='c')
-        axY.tick_params(axis='y', labelcolor = 'c')
+        # axY.set_ylabel("Angular Velocity [deg/sec]", color='c')
+        # axY.tick_params(axis='y', labelcolor = 'c')
         axs[1].set_ylabel("Angular Position [deg]", color='g')
         axs[1].tick_params(axis='y', labelcolor = 'g')
 
-        axY.grid(True, which='both')
+        # axY.grid(True, which='both')
         axs[1].grid(True, which='both')
 
         axs[1].axhline(y=0, color='g', linestyle = 'dashed')
-        axY.axhline(y=0, color='c', linestyle = 'dashed')        
+        # axY.axhline(y=0, color='c', linestyle = 'dashed')        
 
         fig.tight_layout()
         plt.xlabel('Temps (sec)')
@@ -195,6 +195,9 @@ class SerialDataClass:
                     #Bike_Angle, Bike_Angle_Raw, Bike_AngVel, Bike_AngVel_Raw, FW_Angle, FW_Angle_Raw
                       FW_Speed, FW_Speed_Raw, FW_Target_Speed, FW_Target_Accel, FW_Command, Time
             """
+            time = 0
+            printTime = True
+
             while True:
                 serialData = self.ser.readline().decode('utf-8')
                 if serialData.startswith('#'):
@@ -215,12 +218,18 @@ class SerialDataClass:
                     self.data["FW_Target_Speed"].append(float(ser_data[8]))
                     self.data["FW_Target_Accel"].append(float(ser_data[9]))
                     self.data["FW_Command"].append(float(ser_data[10]))
-                    self.data["Time"].append(float(ser_data[11]))
-                
+                    time = float(ser_data[11])
+                    self.data["Time"].append(time)
+
+                    if (time - self.data["Time"][0]) > 20000 and printTime:
+                        print("20 seconds")
+                        printTime = False
+
                 elif serialData.startswith('*'):
                     print("Timeout")
                     break
-
+                
+                
         except KeyboardInterrupt:
             print("Interrupted")
             self.ser.write(endCom.encode())
@@ -268,6 +277,7 @@ class SerialDataClass:
                 if(stable and abs(angle) >= angleThres):
                     endTime = time
                     stable = False
+            if endTime == 0: endTime = self.data["Bike_Angle"][-1]
             print("Start Time: ", startTime)
             print("End Time: ", endTime)
             print("Stable Time: ", endTime - startTime)
@@ -570,10 +580,8 @@ def main():
         serData.connect()
 
     while True:
-        try:
-            serData.getCommand()
-        except KeyboardInterrupt:
-            print("End of program")
+        serData.getCommand()
+
 
     os._exit(0)
 

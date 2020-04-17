@@ -21,6 +21,7 @@ MainController::MainController():_speedFilter(cutoff_freq_speed, SPEED_MEASURE_I
 
     _zeroOffset = ZERO_OFFSET;
     _deadZone = DEAD_ZONE;
+    _inDeadZone = false;
 
     _imuRdy = IMU_Setup();
 
@@ -82,8 +83,19 @@ void MainController::computeCommand(double timeInt){
     _outputSum += _Ki * error * timeInt;   
     output = _Kp * error + _outputSum - _Kd * _angVel; //output = Kp*Error - Kd*Angular speed
 
-    output = abs(_currentAngle) < DEAD_ZONE ? 0  : output;
+    //Check for the dead zone: if angle has been in +/- DeadZone range for more than 100ms, output = 0
+    if(abs(_currentAngle) < DEAD_ZONE && !_inDeadZone){
+        _inDeadZone = true;
+        _deadTime = millis();
+    }
 
+    if(abs(_currentAngle) > DEAD_ZONE)
+        _inDeadZone = false;
+    
+    if(_inDeadZone && millis() - _deadTime > 100)
+        output = 0;
+
+    //Set the output
     _accelOutput = output;
 
     double speedInc = (_accelOutput*RAD_TO_DEG)*timeInt;
@@ -159,4 +171,5 @@ void MainController::setKd(double Kd){_Kd = Kd;}
 //Add offset to current offset
 void MainController::setZeroOffset(float newOffset){ _zeroOffset += newOffset*DEG_TO_RAD;}
 
-void MainController::setDeadZone(double newDeadZone){ _deadZone = newDeadZone*DEG_TO_RAD;}
+//Add value to current offset
+void MainController::setDeadZone(double newDeadZone){ _deadZone += newDeadZone*DEG_TO_RAD;}

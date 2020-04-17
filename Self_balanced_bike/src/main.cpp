@@ -112,8 +112,14 @@ void loop() {
     if(toCheckAngle){
         mainController.updateAngle();
         if(currentTime - prevTimeAngle > 50){
+            double angle = mainController.getAngle();
+            if(abs(angle) < 0.1*DEG_TO_RAD)
+                digitalWrite(13, HIGH);
+            else
+                digitalWrite(13, LOW);
+
             Serial.print("#");
-            Serial.println(mainController.getAngle(), 5);
+            Serial.println(angle, 5);
             prevTimeAngle = currentTime;
         }
     }    
@@ -126,6 +132,7 @@ void readRemote(){
     switch (val)
     {
     case STABILIZE:
+        delay(100);
         Serial.println("Toggle stabilization");
         toStabilise = !toStabilise;
         servoSpeed = 0;
@@ -160,19 +167,19 @@ void readRemote(){
 
 void setServoSpeed(int speed){
     static int speedVal = 0;
-    static int servoSpeeds[3] = {5, 15, 30};
+    static int servoSpeeds[6] = {30, 15, 7, 7, 15, 30};
     switch(speed)
     {
     case -3:
-        speedVal = 90 + servoSpeeds[2];
+        speedVal = 90 + servoSpeeds[5];
         break;
     
     case -2:
-        speedVal = 90 + servoSpeeds[1];
+        speedVal = 90 + servoSpeeds[4];
         break;
     
     case -1:
-        speedVal = 90 + servoSpeeds[0];
+        speedVal = 90 + servoSpeeds[3];
         break;
 
     case 0:
@@ -180,7 +187,7 @@ void setServoSpeed(int speed){
         break;
 
     case 1:
-        speedVal = 90 - servoSpeeds[0];
+        speedVal = 90 - servoSpeeds[2];
         break;
     
     case 2:
@@ -188,7 +195,7 @@ void setServoSpeed(int speed){
         break;
 
     case 3:
-        speedVal = 90 - servoSpeeds[2];
+        speedVal = 90 - servoSpeeds[0];
         break;
 
     default:
@@ -350,7 +357,7 @@ void readSerial(){
                 float newOffset = atof(commande.substring(10).c_str());
                 mainController.setZeroOffset(newOffset);
                 Serial.print("New Offset: ");
-                Serial.println(mainController.getZeroOffset());
+                Serial.println(mainController.getZeroOffset(), 4);
             }
             
             else if(commande.startsWith("setDeadZone")){

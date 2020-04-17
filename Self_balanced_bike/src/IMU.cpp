@@ -55,12 +55,12 @@ bool IMU_Setup(){
     Serial.println(F("Initializing DMP..."));
     devStatus = mpu.dmpInitialize();
 
-    mpu.setXAccelOffset(-1443);
-    mpu.setYAccelOffset(805);
-    mpu.setZAccelOffset(1285);
-    mpu.setXGyroOffset(54);
-    mpu.setYGyroOffset(-17);
-    mpu.setZGyroOffset(33);
+    // mpu.setXAccelOffset(-1443);
+    // mpu.setYAccelOffset(687);
+    // mpu.setZAccelOffset(1275);
+    // mpu.setXGyroOffset(55);
+    // mpu.setYGyroOffset(-17);
+    // mpu.setZGyroOffset(34);
 
     // make sure it worked (returns 0 if so)
     return checkConnection();
@@ -69,9 +69,8 @@ bool IMU_Setup(){
 bool checkConnection(){
    if (devStatus == 0) {
        // Calibration Time: generate offsets and calibrate our MPU6050
-        // mpu.CalibrateAccel(6);
-        // mpu.CalibrateGyro(6);
-        // delay(1500);
+        mpu.CalibrateAccel(6);
+        mpu.CalibrateGyro(6);
         // mpu.PrintActiveOffsets();
 
         // turn on the DMP, now that it's ready

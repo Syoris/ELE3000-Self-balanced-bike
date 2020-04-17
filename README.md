@@ -12,9 +12,18 @@ Code pour le vélo autoéquilibré pour mon projet dans le cadre du cours ELE300
   - [x] Contrôleur de l'angle
 
 ## Contrôleurs
+### PD - Équilibré
+|Contrôleur |-Kp    |-Kd    |Temps max| Angle max| Perturbation|
+|:---------:|:-----:|:-----:|:-------:|:--------:|:-----------:|
+|    C1     | 4500  |  320  |    40   |    6     |      x      |
+|    C2     | 2700  |  320  |    x    |    x     |      x      |
+|    C3     | 0000  |  000  |    00   |   7.5    |      4      |
+|    C4     | 0000  |  000  |    00   |   7.5    |      1      |
+|    C5     | 0000  |  000  |    00   |   7.5    |      x      |
+|    C6     | 0000  |  000  |    00   |   7.5    |      5      |
+
+
 ### PD
-
-
 |Contrôleur |-Kp    |-Kd    |Temps max| Angle max| Perturbation|
 |:---------:|:-----:|:-----:|:-------:|:--------:|:-----------:|
 |    C1     | 4000  |  255  |    x    |    x     |      x      |

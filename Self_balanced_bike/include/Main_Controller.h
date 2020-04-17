@@ -11,8 +11,9 @@
 #define ANGLE_MEASURE_INTERVAL 1.0 //Interval to compute PID for speed control (in mS)
 #define SEND_DATA_INTERVAL 10.0 //Interval to compute PID for speed control (in mS)
 
-#define ZERO_OFFSET 2.9*DEG_TO_RAD
-#define DEAD_ZONE   0.25*DEG_TO_RAD
+#define ZERO_OFFSET 0.0*DEG_TO_RAD
+#define DEAD_ZONE   0.0*DEG_TO_RAD
+#define DEAD_TIME 0.1
 
 class MainController{
     private:
@@ -39,6 +40,8 @@ class MainController{
         double _Kp, _Ki, _Kd;
         double _outputSum;
         double _deadZone;
+        unsigned long _deadTime;
+        bool _inDeadZone;
 
         bool _toStabilize = false;
         bool _imuRdy = false;
