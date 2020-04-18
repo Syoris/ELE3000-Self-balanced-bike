@@ -22,9 +22,12 @@ MainController::MainController():_speedFilter(cutoff_freq_speed, SPEED_MEASURE_I
     _zeroOffset = ZERO_OFFSET;
     _deadZone = DEAD_ZONE;
     _inDeadZone = false;
+    _inDanger = false;
 
+}
+
+void MainController::init(){
     _imuRdy = IMU_Setup();
-
 }
 
 void MainController::startController(){
@@ -36,6 +39,8 @@ void MainController::startController(){
     _angVelRaw = 0;
     _prevAngVel = 0;
     _outputSum = 0;
+    _targetAngle = 0;
+    _inDanger = false;
 
     unsigned int curTime = millis();
     while(millis() - curTime < 250)
@@ -76,6 +81,25 @@ void MainController::measureSpeed(double timeInt){
 }
 
 void MainController::computeCommand(double timeInt){
+    double mSpeed = flywheelMotor.getSpeed();
+    if(mSpeed > SPD_UP_THRES && !_inDanger){
+        _inDanger = true;
+        _targetAngle = -DANGER_ANGLE_TARGET;
+    }
+    else if(mSpeed < -SPD_UP_THRES && !_inDanger){
+        _inDanger = true;
+        _targetAngle = DANGER_ANGLE_TARGET;
+    }
+    else if(!_inDanger){
+        _inDanger = false;
+        _targetAngle = 0.0;
+    }
+
+    if(_inDanger && abs(mSpeed) < SPD_DWN_TRHES){
+        _inDanger = false;
+        _targetAngle = 0;
+    }
+
     double error = _targetAngle - _currentAngle;
     double output;
 

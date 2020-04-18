@@ -182,13 +182,15 @@ void FlywheelMotor::brakeMotor(){
 // Send bike data to Python Interface
 void FlywheelMotor::printMotorData(){
     // Data format:
-    // #Bike_Angle, Bike_Angle_Raw, Bike_AngVel, Bike_AngVel_Raw, FW_Angle, FW_Angle_Raw
+    // ##Bike_Target_Angle, Bike_Angle, Bike_Angle_Raw, Bike_AngVel, Bike_AngVel_Raw, FW_Angle, FW_Angle_Raw
     //   FW_Speed, FW_Speed_Raw, FW_Target_Speed, FW_Target_Accel, FW_Command, Time
     if(!_printTextData){
         Serial.print("#");
         Serial.print(mainController.getAngle(), 5);
         Serial.print(", ");
         Serial.print(mainController.getAngleRaw(), 5);
+        Serial.print(", ");
+        Serial.print(mainController.getTargetAngle(), 5);
         Serial.print(", ");
         Serial.print(mainController.getAngularVel());
         Serial.print(", ");

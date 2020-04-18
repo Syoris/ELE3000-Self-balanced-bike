@@ -45,6 +45,7 @@ class SerialDataClass:
 
         self.data = {   "Bike_Angle": [],           # Bike angle [deg]
                         "Bike_Angle_Raw": [],       # Bike angle [deg]
+                        "Bike_Target_Angle": [],    # Bike angular velocity [deg/sec]
                         "Bike_AngularVel": [],      # Bike angular velocity [deg/sec]
                         "Bike_AngularVel_Raw": [],  # Bike angular velocity, raw [deg/sec]
                         "FW_Angle": [],             # Flywheel angle [deg]
@@ -123,7 +124,8 @@ class SerialDataClass:
 
         axs[1].plot(x, self.data["Bike_Angle"], 'g', label="Bike angle [deg]")
         if(showRaw) : axs[1].plot(x, self.data["Bike_Angle_Raw"], 'y:', label="Bike angle, raw[deg]")
-
+        axs[1].plot(x, self.data["Bike_Target_Angle"], 'k--', label="Target angle [deg]")
+        
         # axY.plot(x, self.data["Bike_AngularVel"], 'c', label="Angular Velocity [deg/sec]")
         if(showRaw) : axY.plot(x, self.data["Bike_AngularVel_Raw"], 'm:', label="Angular Velocity, raw [deg/sec]")
 
@@ -150,6 +152,7 @@ class SerialDataClass:
     def readSerialData(self, in_type=""):
         self.data["Bike_Angle"] = []
         self.data["Bike_Angle_Raw"] = []
+        self.data["Bike_Target_Angle"] = []
         self.data["Bike_AngularVel"] = []
         self.data["Bike_AngularVel_Raw"] = []
         self.data["FW_Angle"] = []
@@ -192,7 +195,7 @@ class SerialDataClass:
         try:
             """
                 Data Format:
-                    #Bike_Angle, Bike_Angle_Raw, Bike_AngVel, Bike_AngVel_Raw, FW_Angle, FW_Angle_Raw
+                    #Bike_Angle, Bike_Angle_Raw, Bike_Target_Angle, Bike_AngVel, Bike_AngVel_Raw, FW_Angle, FW_Angle_Raw
                       FW_Speed, FW_Speed_Raw, FW_Target_Speed, FW_Target_Accel, FW_Command, Time
             """
             time = 0
@@ -209,20 +212,21 @@ class SerialDataClass:
 
                     self.data["Bike_Angle"].append(float(ser_data[0])*180/np.pi) # Angle du vélo
                     self.data["Bike_Angle_Raw"].append(float(ser_data[1])*180/np.pi) # Angle du vélo
-                    self.data["Bike_AngularVel"].append(float(ser_data[2])*180/np.pi)
-                    self.data["Bike_AngularVel_Raw"].append(float(ser_data[3])*180/np.pi)
-                    self.data["FW_Angle"].append(float(ser_data[4]))
-                    self.data["FW_Angle_Raw"].append(float(ser_data[5]))
-                    self.data["FW_Speed"].append(float(ser_data[6]))
-                    self.data["FW_Speed_Raw"].append(float(ser_data[7]))
-                    self.data["FW_Target_Speed"].append(float(ser_data[8]))
-                    self.data["FW_Target_Accel"].append(float(ser_data[9]))
-                    self.data["FW_Command"].append(float(ser_data[10]))
-                    time = float(ser_data[11])
+                    self.data["Bike_Target_Angle"].append(float(ser_data[2])*180/np.pi) # Angle du vélo
+                    self.data["Bike_AngularVel"].append(float(ser_data[3])*180/np.pi)
+                    self.data["Bike_AngularVel_Raw"].append(float(ser_data[4])*180/np.pi)
+                    self.data["FW_Angle"].append(float(ser_data[5]))
+                    self.data["FW_Angle_Raw"].append(float(ser_data[6]))
+                    self.data["FW_Speed"].append(float(ser_data[7]))
+                    self.data["FW_Speed_Raw"].append(float(ser_data[8]))
+                    self.data["FW_Target_Speed"].append(float(ser_data[9]))
+                    self.data["FW_Target_Accel"].append(float(ser_data[10]))
+                    self.data["FW_Command"].append(float(ser_data[11]))
+                    time = float(ser_data[12])
                     self.data["Time"].append(time)
 
-                    if (time - self.data["Time"][0]) > 20000 and printTime:
-                        print("20 seconds")
+                    if (time - self.data["Time"][0]) > 60000 and printTime:
+                        print("60 seconds")
                         printTime = False
 
                 elif serialData.startswith('*'):

@@ -14,6 +14,9 @@
 #define ZERO_OFFSET 0.0*DEG_TO_RAD
 #define DEAD_ZONE   0.0*DEG_TO_RAD
 #define DEAD_TIME 0.1
+#define SPD_UP_THRES 6500
+#define SPD_DWN_TRHES 150
+#define DANGER_ANGLE_TARGET 1*DEG_TO_RAD
 
 class MainController{
     private:
@@ -42,6 +45,7 @@ class MainController{
         double _deadZone;
         unsigned long _deadTime;
         bool _inDeadZone;
+        bool _inDanger;
 
         bool _toStabilize = false;
         bool _imuRdy = false;
@@ -52,6 +56,8 @@ class MainController{
     
     public:
         MainController();
+
+        void init();
 
         void startController();
         void stopController();

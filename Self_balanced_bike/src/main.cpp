@@ -59,17 +59,21 @@ int servoSpeed = 0;
 // ===                      INITIAL SETUP                       ===
 // ================================================================
 void setup() {
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, HIGH);
+
     //! Initialize serial communication
     Serial.begin(9600);
+    Serial.println("setup");
 
-    //! Configure LED for output
+    //! Init 
+    mainController.init();    
     IR_Setup();
 
     servo.attach(SERVO_PIN);
     setServoSpeed(servoSpeed);
 
-    // pinMode(LED_PIN, OUTPUT);
-    // digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED_PIN, LOW);
 
 }
 
@@ -113,7 +117,7 @@ void loop() {
         mainController.updateAngle();
         if(currentTime - prevTimeAngle > 50){
             double angle = mainController.getAngle();
-            if(abs(angle) < 0.1*DEG_TO_RAD)
+            if(abs(angle) < 0.05*DEG_TO_RAD)
                 digitalWrite(13, HIGH);
             else
                 digitalWrite(13, LOW);
@@ -211,12 +215,14 @@ void startController(){
 }
 
 void stopController(){
+    digitalWrite(LED_PIN, LOW);
     motorOn = false;
     followAccel = false;
     toStabilise = false;
     toCheckAngle = false;
     goalAccel = 0;
     mainController.stopController();
+
 }
 
 // Fonction de test
