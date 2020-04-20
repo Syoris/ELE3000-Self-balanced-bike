@@ -1,16 +1,6 @@
 # ELE3000-Self-balanced-bike
 Code pour le vélo autoéquilibré pour mon projet dans le cadre du cours ELE3000
 
-## Tâches à faire
-- [x] Identifier le moteur
-- [x] Simulations
-    - [x] Contrôleur du moteur
-    - [x] Contrôleur du vélo
-- [] Déterminer la fréquence du système
-- [x] Code embarqué
-  - [x] Contrôleur en accélération
-  - [x] Contrôleur de l'angle
-
 ## Contrôleurs
 ### PD - Équilibré
 |Contrôleur |-Kp    |-Kd    |Temps max| Angle max| Perturbation|

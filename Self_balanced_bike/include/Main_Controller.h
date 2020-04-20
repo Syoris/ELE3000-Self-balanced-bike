@@ -11,9 +11,6 @@
 #define ANGLE_MEASURE_INTERVAL 1.0 //Interval to compute PID for speed control (in mS)
 #define SEND_DATA_INTERVAL 10.0 //Interval to compute PID for speed control (in mS)
 
-#define ZERO_OFFSET 0.0*DEG_TO_RAD
-#define DEAD_ZONE   0.0*DEG_TO_RAD
-#define DEAD_TIME 0.1
 #define SPD_UP_THRES 6500
 #define SPD_DWN_TRHES 150
 #define DANGER_ANGLE_TARGET 1*DEG_TO_RAD
@@ -21,7 +18,6 @@
 class MainController{
     private:
         // Bike angle
-        float _zeroOffset;
         double _currentAngle;
         double _currentAngleRaw;
         double _prevAngle;
@@ -42,9 +38,6 @@ class MainController{
         double _accelOutput;    //Target speed of flywheel
         double _Kp, _Ki, _Kd;
         double _outputSum;
-        double _deadZone;
-        unsigned long _deadTime;
-        bool _inDeadZone;
         bool _inDanger;
 
         bool _toStabilize = false;
@@ -52,7 +45,6 @@ class MainController{
 
         // Filtre
         Filter _speedFilter;
-        Filter _angleFilter;
     
     public:
         MainController();
@@ -74,16 +66,12 @@ class MainController{
         double getAngularVelRaw();
         double getTargetAngle();
         double getTargetAccel();
-        float getZeroOffset();
-        double getDeadZone();
 
         double getKp();
         double getKi();
         double getKd();
 
         void setTargetAngle(double newAngle);
-        void setZeroOffset(float newOffset);
-        void setDeadZone(double newDeadZone);
         void setKp(double Kp);
         void setKi(double Ki);
         void setKd(double Kd);

@@ -47,7 +47,7 @@ class FlywheelMotor{
         double _speedCommand;
         double _Kp, _Kd, _Ki;
         double _KiSamp;     //Ki modified by compute time
-        double _outputSum;  //I
+        double _outputSum;  //Integral
 
         //Pinout
         int _pin1 = MOTOR_PIN_1;

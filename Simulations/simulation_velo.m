@@ -403,3 +403,98 @@ xlabel("Temps (sec)")
 ylabel("Vitessse [deg/sec]")
 grid on
 hold off
+
+
+%% Plot, pertrubations
+clc
+close all
+
+startData = 50;
+endData = 400;
+load(fullfile("PythonData", 'Pert_5'))
+
+Time = Time - Time(startData);
+
+
+
+% Plot results
+figure
+% Angle
+hold on
+plot(Time(startData:endData), Bike_Angle(startData:endData), 'r', 'DisplayName', 'Angle [deg]')
+legend
+title("Résistance aux perturbations")
+xlabel("Temps (sec)")
+ylabel("Angle [deg]")
+xlim([0 3])
+grid on
+hold off
+
+
+%% Comparaison Algo
+clc
+close all
+
+n1 = "noAlgo_01";
+n2 = "5min";
+nData1 = 550;
+nData2 = 700;
+
+load(fullfile("PythonData", 'Velo_'+n1))
+Bike_Angle = -Bike_Angle;
+FW_Speed = -FW_Speed;
+% Plot results
+figure
+% suptitle("Sans l'algorithme")
+% Angle
+subplot(2, 1, 1)
+hold on
+plot(Time(1:nData1), Bike_Angle(1:nData1), 'r', 'DisplayName', 'Angle [deg]')
+legend
+% title("Position")
+xlabel("Temps (sec)")
+ylabel("Angle [deg]")
+xlim([0 5.5])
+grid on
+hold off
+% Vitesse flywheel
+subplot(2, 1, 2)
+hold on
+plot(Time(1:nData1), FW_Speed(1:nData1), 'b', 'DisplayName', 'Vitesse [deg/sec]')
+% plot(Time(1:nData), FW_Target_Speed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (exp 1)')
+legend
+% title("Vitesse")
+xlabel("Temps (sec)")
+ylabel("Vitessse [deg/sec]")
+xlim([0 5.5])
+grid on
+hold off
+
+load(fullfile("PythonData", 'Velo_'+n2))
+
+% Plot results
+figure
+% suptitle("Avec l'algorithme")
+% Angle
+subplot(2, 1, 1)
+hold on
+plot(Time(1:nData2), Bike_Angle(1:nData2), 'r', 'DisplayName', 'Angle [deg]')
+legend
+% title("Position")
+xlabel("Temps (sec)")
+ylabel("Angle [deg]")
+grid on
+hold off
+% Vitesse flywheel
+subplot(2, 1, 2)
+hold on
+plot(Time(1:nData2), FW_Speed(1:nData2), 'b', 'DisplayName', 'Vitesse [deg/sec]')
+% plot(Time(1:nData), FW_Target_Speed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (exp 1)')
+legend
+% title("Vitesse")
+xlabel("Temps (sec)")
+ylabel("Vitessse [deg/sec]")
+grid on
+hold off
+
+

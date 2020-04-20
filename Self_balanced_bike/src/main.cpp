@@ -171,7 +171,7 @@ void readRemote(){
 
 void setServoSpeed(int speed){
     static int speedVal = 0;
-    static int servoSpeeds[6] = {30, 15, 7, 7, 15, 30};
+    static int servoSpeeds[6] = {30, 10, 7, 5, 10, 30};
     switch(speed)
     {
     case -3:
@@ -359,20 +359,6 @@ void readSerial(){
                 Serial.println(flywheelMotor.getKd(), 5);
             }
             
-            else if(commande.startsWith("setOffset")){
-                float newOffset = atof(commande.substring(10).c_str());
-                mainController.setZeroOffset(newOffset);
-                Serial.print("New Offset: ");
-                Serial.println(mainController.getZeroOffset(), 4);
-            }
-            
-            else if(commande.startsWith("setDeadZone")){
-                double newDeadZone = atof(commande.substring(12).c_str());
-                mainController.setDeadZone(newDeadZone);
-                Serial.print("New DeadZone: ");
-                Serial.println(mainController.getDeadZone());
-            }
-
             else
                 Serial.println("Input invalid");
 

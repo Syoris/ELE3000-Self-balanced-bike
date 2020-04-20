@@ -4,14 +4,8 @@ import os
 import matplotlib
 matplotlib.use('TkAgg')
 from matplotlib import pyplot as plt
-# import time as t
 import scipy.io
 serPort = "COM3"
-
-# p = -25
-# KpM = 0.007052  
-# KiM = 0.195357
-# KdM = 0
 
 # p = -40
 KpM = 0.011740  

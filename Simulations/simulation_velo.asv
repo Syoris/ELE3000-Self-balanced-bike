@@ -200,7 +200,7 @@ B = (Mv*Lv + Mr*Lr)*g;
 % C1: p =
 % C2: p =
 
-p = 5;
+p = 8;
 
 syms Kps Kds
 
@@ -245,7 +245,7 @@ if plotExp == true
     AngleInitial = BikeAngle(1);
 else
     simTime = 2;
-    AngleInitial = 7.5;
+    AngleInitial = 8;
 end
 
 
@@ -361,13 +361,14 @@ clc
 close all
 
 n = "11";
-nData = 100;
+nData = 400;
 load(fullfile("PythonData", 'Velo_Exp_'+n))
 
 Kp_v = -4300;
 Ki_v = 0;
 Kd_v = -320;
 
+AngleInitial = Bike_Angle(1);
 simTime = Time(nData);
 sim("Simulink/Velo_Complet_BF")
 
@@ -402,3 +403,93 @@ xlabel("Temps (sec)")
 ylabel("Vitessse [deg/sec]")
 grid on
 hold off
+
+
+%% Plot, pertrubations
+clc
+close all
+
+startData = 50;
+endData = 400;
+load(fullfile("PythonData", 'Pert_5'))
+
+Time = Time - Time(startData);
+
+
+
+% Plot results
+figure
+% Angle
+hold on
+plot(Time(startData:endData), Bike_Angle(startData:endData), 'r', 'DisplayName', 'Angle [deg]')
+legend
+title("Résistance aux perturbations")
+xlabel("Temps (sec)")
+ylabel("Angle [deg]")
+xlim([0 3])
+grid on
+hold off
+
+
+%% Comparaison Algo
+clc
+close all
+
+n1 = "5min";
+n2 = "noAlgo";
+nData = 700;
+
+load(fullfile("PythonData", 'Velo_'+n1))
+% Plot results
+figure
+% suptitle("Sans l'algorithme")
+% Angle
+subplot(2, 1, 1)
+hold on
+plot(Time(1:nData), Bike_Angle(1:nData), 'r', 'DisplayName', 'Angle Exp 1')
+legend
+% title("Position")
+xlabel("Temps (sec)")
+ylabel("Angle [deg]")
+grid on
+hold off
+% Vitesse flywheel
+subplot(2, 1, 2)
+hold on
+plot(Time(1:nData), FW_Speed(1:nData), 'b', 'DisplayName', 'Vitesse (exp 1 )')
+% plot(Time(1:nData), FW_Target_Speed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (exp 1)')
+legend
+% title("Vitesse")
+xlabel("Temps (sec)")
+ylabel("Vitessse [deg/sec]")
+grid on
+hold off
+
+load(fullfile("PythonData", 'Velo_'+n2))
+
+% Plot results
+figure
+% suptitle("Avec l'algorithme")
+% Angle
+subplot(2, 1, 1)
+hold on
+plot(Time(1:nData), Bike_Angle(1:nData), 'r', 'DisplayName', 'Angle Exp 1')
+legend
+% title("Position")
+xlabel("Temps (sec)")
+ylabel("Angle [deg]")
+grid on
+hold off
+% Vitesse flywheel
+subplot(2, 1, 2)
+hold on
+plot(Time(1:nData), FW_Speed(1:nData), 'r', 'DisplayName', 'Vitesse (exp 1 )')
+plot(Time(1:nData), FW_Target_Speed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (exp 1)')
+legend
+% title("Vitesse")
+xlabel("Temps (sec)")
+ylabel("Vitessse [deg/sec]")
+grid on
+hold off
+
+

@@ -2,12 +2,6 @@
 
 bool toPrint = true; 
 
-// double Kp_m = 0.003812;
-// double Ki_m = 0.228711;
-// double Kd_m = -0.000111;
-
-
-// Pôle à -40
 double Kp_m = 0.011740;
 double Ki_m = 0.500114;
 double Kd_m = 0;

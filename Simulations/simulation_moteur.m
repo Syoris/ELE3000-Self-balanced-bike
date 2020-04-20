@@ -122,31 +122,32 @@ targetSpeed = 8000;
 sim("Simulink/Moteur_BF_v2")
 
 figure
-suptitle("PID")
-subplot(1, 2, 1)
+% suptitle("PID")
+% subplot(1, 2, 1)
 hold on
 if plotExp == true
-    plot(Time, CurrentSpeed, 'r', 'DisplayName', 'Expérimental')
-    % plot(Time, TargetSpeed, 'k', 'DisplayName', 'Target Speed')
+    plot(Time, FW_Speed, 'r', 'DisplayName', 'Expérimental')
+%     plot(Time, FW_Target_Speed, 'k', 'DisplayName', 'Target Speed')
 end
 plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Théorique')
 plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'k', 'DisplayName', 'Vitesse désiré')
 legend
-title("Vitesse")
+title("Comparaison de la réponse théorique et expérimentale")
 xlabel("Temps (sec)")
 ylabel("Vitesse [deg/sec]")
+xlim([0 0.7])
 grid on
 hold off
 
-subplot(1, 2, 2)
-hold on
-if plotExp == true
-    plot(Time, Command, 'r', 'DisplayName', 'Expérimental')
-end
-plot(U(:, 1), U(:, 2), 'b', 'DisplayName', 'Théorique')
-legend
-title("Tension")
-xlabel("Temps (sec)")
-ylabel("Tension [V]")
-grid on
-hold off
+% subplot(1, 2, 2)
+% hold on
+% if plotExp == true
+%     plot(Time, FW_Command, 'r', 'DisplayName', 'Expérimental')
+% end
+% plot(U(:, 1), U(:, 2), 'b', 'DisplayName', 'Théorique')
+% legend
+% title("Tension")
+% xlabel("Temps (sec)")
+% ylabel("Tension [V]")
+% grid on
+% hold off
