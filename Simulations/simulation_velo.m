@@ -1,6 +1,22 @@
+% Fichier pour la conception du contrôleur du vélo
+% Auteur: Charles Sirois
+% Date: 21/04/2020
+%
+% Guide d'utilisation:
+% 1 - Exécuter le fichier parametres.m pour load les params du moteur
+% 2 - Exécuter les sections désirées:
+%       - Velo BO: Comparaison de la modélisation mathématique et la
+%                           réponse exp du vélo
+%       - Conception du contrôleur: Calcul les gains au pôle p spécifié
+%       - Simulation Vélo complet: Simule le contrôleur. Possible de
+%                                 comparer avec la réponse exp
+%       - Comparaison Algo: Compare la réponse avec et sans
+%                           l'algorithme de limitation de vitesse de 
+%                           la roue inertielle
+
 %% ======= Vélo ======
 %% ----- Identification -----
-%% Velo BO_01
+%% Velo BO
 clc
 close all
 
@@ -49,156 +65,12 @@ ylabel("Angle [deg]")
 grid on
 hold off
 
-%% Velo BO_02
-clc
-close all
-
-% Sans accelération
-load(fullfile("PythonData", 'Velo_BO_02'))
-
-startVal = 11;
-nVal = 15;
-simTime = Time(nVal+1);
-
-AngleInitial = BikeAngle(startVal);
-AccelVal = 0;
-sim("Simulink/Velo_BO")
-
-figure
-suptitle("Vélo en BO")
-subplot(1, 3, 1)
-hold on
-plot(Time(1:nVal+1), BikeAngle(startVal:startVal+nVal), 'r', 'DisplayName', 'Angle expérimentale')
-plot(Theta_BO(:, 1), Theta_BO(:, 2), 'b', 'DisplayName', 'Angle théorique')
-legend
-title("Sans accélération")
-xlabel("Temps (sec)")
-ylabel("Angle [deg]")
-grid on
-hold off
-
-% Avec accélération
-load(fullfile("PythonData", 'Velo_BO_Mot_02'))
-startVal = 1;
-nVal = 22;
-simTime = Time(nVal+1);
-
-AngleInitial = BikeAngle(startVal);
-AccelVal = -20000;
-
-sim("Simulink/Velo_BO_Moteur")
-
-subplot(1, 3, 2)
-hold on
-plot(Time(1:nVal+1), BikeAngle(startVal:startVal+nVal), 'r', 'DisplayName', 'Angle (exp)')
-plot(Theta_BO(:, 1), Theta_BO(:, 2), 'b', 'DisplayName', 'Angle (théo)')
-legend
-title("Avec accélération")
-xlabel("Temps (sec)")
-ylabel("Angle [deg]")
-grid on
-hold off
-
-% Comparaison des vitesses
-subplot(1, 3, 3)
-hold on
-plot(Time(1:nVal+1), CurrentSpeed(startVal:startVal+nVal), 'r', 'DisplayName', 'Vitesse (exp)')
-plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Vitesse (théo)')
-legend
-title("Comparaison des vitesses du moteur")
-xlabel("Temps (sec)")
-ylabel("Angle [deg]")
-grid on
-hold off
-
-
 %% ----- Contrôleur du vélo ----- 
-%% Pôles alignés en accel
-close all
-clc
-fprintf("Méthode par pôles alignés\n");
-A = Mv*Lv^2 + Mr*Lr^2;
-B = (Mv*Lv + Mr*Lr)*g;
-
-p_r = 5;
-p_i = 5;
-p1 = s+p_r+p_i*1i;
-p2 = s+p_r-p_i*1i;
-poles = p1*p2*(s+p_r);
-
-[num_v, den_v] = tfdata(poles, 'v');
-a_v = num_v(2);
-b_v = num_v(3);
-c_v = num_v(4);
-
-Kp_v = -((Jv+Jr+A)*b_v+B)/Jr;
-Ki_v = -(Jv+Jr+A)*c_v/Jr;
-Kd_v = -(Jv+Jr+A)*a_v/Jr;
-
-G2 = feedback(G_a, Kd_v*s);
-G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
-
-fprintf("\n---- Caratéristiques en BF ----\n");
-G_bf
-disp("Pôles: ")
-disp(pole(G_bf))
-disp("Gain statique: ")
-disp(dcgain(G_bf))
-disp("Zéro: ")
-disp(zero(G_bf))
-
-fprintf("---- Gains du vélo ----\n");
-fprintf("\tKp: %4.2f\n", Kp_v)
-fprintf("\tKi: %4.2f\n", Ki_v)
-fprintf("\tKd: %4.2f\n", Kd_v)
-
-%% Simplification pôles/zéro
-close all
-clc
-fprintf("Méthode par pôles alignés\n");
-A = Mv*Lv^2 + Mr*Lr^2;
-B = (Mv*Lv + Mr*Lr)*g;
-
-syms Kps Kis Kds
-
-a = 10;
-
-eqn1 = 2*a + Kis/Kps == -(Jr*Kds)/(Jv+Jr+A);
-eqn2 = 2*a^2 + 2*a*Kis/Kps == -(B+Jr*Kps)/(Jv+Jr+A);
-eqn3 = (2*a^2*Kis)/Kps == -(Jr*Kis)/(Jv+Jr+A);
-
-sol = solve([eqn1, eqn2, eqn3], [Kps, Kis, Kds]);
-
-i = 2;
-Kp_v = double(sol.Kps(i));
-Ki_v = double(sol.Kis(i));
-Kd_v = double(sol.Kds(i));
-
-fprintf("---- Gains du vélo ----\n");
-fprintf("\tKp: %4.2f\n", Kp_v)
-fprintf("\tKi: %4.2f\n", Ki_v)
-fprintf("\tKd: %4.2f\n", Kd_v)
-
-G2 = feedback(G_a, Kd_v*s);
-G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
-
-fprintf("\n---- Caratéristiques en BF ----\n");
-G_bf
-disp("Pôles: ")
-disp(pole(G_bf))
-disp("Gain statique: ")
-disp(dcgain(G_bf))
-disp("Zéro: ")
-disp(zero(G_bf))
-
-%% PD
+%% Conception du contrôleur
 close all
 clc
 A = Mv*Lv^2 + Mr*Lr^2;
 B = (Mv*Lv + Mr*Lr)*g;
-
-% C1: p =
-% C2: p =
 
 p = 8;
 
@@ -214,7 +86,7 @@ Kp_v = double(sol.Kps(i));
 Kd_v = double(sol.Kds(i));
 Ki_v = 0;
 
-G2 = feedback(G_a, Kd_v*s);
+G2 = feedback(G, Kd_v*s);
 G_bf = minreal(feedback(G2*(Kp_v + Ki_v/s), 1));
 
 fprintf("---- Caratéristiques en BF ----\n");
@@ -232,23 +104,25 @@ fprintf("\n---- Gains du vélo ----\n");
 fprintf("\tKp: %4.6f\n", Kp_v)
 fprintf("\tKd: %4.6f\n", Kd_v)
 
+clear p A B eqn1 eqn2 sol
+clear Kps Kds i G2
+
 %% Simulation Vélo complet
 clc
 close all
 
 plotExp = 0;
 nData = 75;
+p = 0;
 
 if plotExp == true
     load(fullfile("PythonData", 'Velo_PD_03'))
     simTime = Time(nData);
     AngleInitial = BikeAngle(1);
 else
-    simTime = 2;
+    simTime = 1;
     AngleInitial = 8;
 end
-
-
 
 sim("Simulink/Velo_Complet_BF")
 sim("Simulink/Velo_BF")
@@ -257,14 +131,14 @@ sim("Simulink/Velo_BF")
 figure
 suptitle("Vélo Complet")
 % Angle
-subplot(3, 1, 1)
+subplot(2, 1, 1)
 hold on
 %   Exp data
 if plotExp == true
     plot(Time(1:nData), BikeAngle(1:nData), 'r', 'DisplayName', 'Expérimental')
 end
 %   Théo data
-plot(Theta_BF(:, 1), Theta_BF(:, 2), 'b', 'DisplayName', 'Théorique')
+plot(Theta_BF(:, 1), Theta_BF(:, 2), 'r', 'DisplayName', 'Théorique')
 % plot(Theta_BF_nm(:, 1), Theta_BF_nm(:, 2), 'k', 'DisplayName', 'Sans moteur')
 legend
 title("Position")
@@ -273,163 +147,30 @@ ylabel("Angle [deg]")
 grid on
 hold off
 
-% Vitesse flywheel
-subplot(3, 1, 2)
-hold on
-%   Exp data
-if plotExp == true
-    plot(Time(1:nData), CurrentSpeed(1:nData), 'r', 'DisplayName', 'Vitesse (exp)')
-    plot(Time(1:nData), TargetSpeed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (ex)')
-end
-%   Theo Data
-plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Vitesse actuelle (theo)')
-plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'b--', 'DisplayName', 'Vitesse désirée (theo)')
-% plot(Phi_dot_des_nm(:, 1), Phi_dot_des_nm(:, 2), 'k--', 'DisplayName', 'Vitesse désirée sans moteur') % Simu parfaite
-legend
-title("Vitesse")
-xlabel("Temps (sec)")
-ylabel("Vitessse [deg/sec]")
-grid on
-hold off
-
-% Vitesse vélo
-subplot(3, 1, 3)
-hold on
-%   Exp data
-if plotExp == true
-    plot(Time(1:nData), AngularVel(1:nData), 'r', 'DisplayName', 'Vitesse (exp)')
-end
-%   Theo Data
-plot(Theta_dot_BF(:, 1), Theta_dot_BF(:, 2), 'b', 'DisplayName', 'Vitesse avec moteur')
-% plot(Theta_dot_BF_nm(:, 1), Theta_dot_BF_nm(:, 2), 'k', 'DisplayName', 'Vitesse sans moteur')
-legend
-title("Vitesse du vélo")
-xlabel("Temps (sec)")
-ylabel("Vitessse [deg/sec]")
-grid on
-hold off
+% % Vitesse flywheel
+% subplot(2, 1, 2)
+% hold on
+% %   Exp data
+% if plotExp == true
+%     plot(Time(1:nData), CurrentSpeed(1:nData), 'r', 'DisplayName', 'Vitesse (exp)')
+%     plot(Time(1:nData), TargetSpeed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (ex)')
+% end
+% %   Theo Data
+% plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Vitesse actuelle (theo)')
+% plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'b--', 'DisplayName', 'Vitesse désirée (theo)')
+% % plot(Phi_dot_des_nm(:, 1), Phi_dot_des_nm(:, 2), 'k--', 'DisplayName', 'Vitesse désirée sans moteur') % Simu parfaite
+% legend
+% title("Vitesse")
+% xlabel("Temps (sec)")
+% ylabel("Vitessse [deg/sec]")
+% grid on
+% hold off
 
 fprintf("---- Maximum ----\n");
 fprintf("\tVitesse max [deg/sec]: %6.2f\n", max(abs(Phi_dot_des(:, 2))))
 fprintf("\tAccel max [deg/sec]: %6.2f\n", max(abs(Phi_dot_dot_des(:, 2))))
 
-%% Comparaison expérimental
-clc
-close all
-
-n1 = "07";
-n2 = "08";
-nData = 100;
-
-% Plot results
-figure
-suptitle("Vélo Complet")
-% Angle
-subplot(2, 1, 1)
-hold on
-load(fullfile("PythonData", 'Velo_Exp_'+n1))
-plot(Time(1:nData), Bike_Angle(1:nData), 'r', 'DisplayName', 'Angle Exp 1')
-load(fullfile("PythonData", 'Velo_Exp_'+n2))
-plot(Time(1:nData), Bike_Angle(1:nData), 'b', 'DisplayName', 'Angle Exp 2')
-legend
-title("Position")
-xlabel("Temps (sec)")
-ylabel("Angle [deg]")
-grid on
-hold off
-
-% Vitesse flywheel
-subplot(2, 1, 2)
-hold on
-%   Exp data
-load(fullfile("PythonData", 'Velo_Exp_'+n1))
-plot(Time(1:nData), FW_Speed(1:nData), 'r', 'DisplayName', 'Vitesse (exp 1 )')
-plot(Time(1:nData), FW_Target_Speed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (exp 1)')
-load(fullfile("PythonData", 'Velo_Exp_'+n2))
-plot(Time(1:nData), FW_Speed(1:nData), 'b', 'DisplayName', 'Vitesse (exp 1 )')
-plot(Time(1:nData), FW_Target_Speed(1:nData), 'b--', 'DisplayName', 'Vitesse désirée (exp 1)')
-legend
-title("Vitesse")
-xlabel("Temps (sec)")
-ylabel("Vitessse [deg/sec]")
-grid on
-hold off
-
-
-%% Comparaison expérimental, théorique
-clc
-close all
-
-n = "11";
-nData = 400;
-load(fullfile("PythonData", 'Velo_Exp_'+n))
-
-Kp_v = -4300;
-Ki_v = 0;
-Kd_v = -320;
-
-AngleInitial = Bike_Angle(1);
-simTime = Time(nData);
-sim("Simulink/Velo_Complet_BF")
-
-% Plot results
-figure
-suptitle("Vélo Complet")
-% Angle
-subplot(2, 1, 1)
-hold on
-plot(Time(1:nData), Bike_Angle(1:nData), 'r', 'DisplayName', 'Angle Exp 1')
-plot(Theta_BF(:, 1), Theta_BF(:, 2), 'b', 'DisplayName', 'Théorique')
-legend
-title("Position")
-xlabel("Temps (sec)")
-ylabel("Angle [deg]")
-grid on
-hold off
-
-% Vitesse flywheel
-subplot(2, 1, 2)
-hold on
-%   Exp data
-plot(Time(1:nData), FW_Speed(1:nData), 'r', 'DisplayName', 'Vitesse (exp 1 )')
-plot(Time(1:nData), FW_Target_Speed(1:nData), 'r--', 'DisplayName', 'Vitesse désirée (exp 1)')
-
-plot(Phi_dot(:, 1), Phi_dot(:, 2), 'b', 'DisplayName', 'Vitesse actuelle (theo)')
-plot(Phi_dot_des(:, 1), Phi_dot_des(:, 2), 'b--', 'DisplayName', 'Vitesse désirée (theo)')
-
-legend
-title("Vitesse")
-xlabel("Temps (sec)")
-ylabel("Vitessse [deg/sec]")
-grid on
-hold off
-
-
-%% Plot, pertrubations
-clc
-close all
-
-startData = 50;
-endData = 400;
-load(fullfile("PythonData", 'Pert_5'))
-
-Time = Time - Time(startData);
-
-
-
-% Plot results
-figure
-% Angle
-hold on
-plot(Time(startData:endData), Bike_Angle(startData:endData), 'r', 'DisplayName', 'Angle [deg]')
-legend
-title("Résistance aux perturbations")
-xlabel("Temps (sec)")
-ylabel("Angle [deg]")
-xlim([0 3])
-grid on
-hold off
-
+clear plotExp p nData
 
 %% Comparaison Algo
 clc

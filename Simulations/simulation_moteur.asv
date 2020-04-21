@@ -1,10 +1,10 @@
-% Fichier pour la conception du contrôleur du moteur
+% Fichier pour la conception du contrôleur du moteur.
 % Auteur: Charles Sirois
 % Date: 21/04/2020
 %
 % Guide d'utilisation:
-% 1 - Exécuter le fichier parametres.m pour load les params du moteur
-% 2 - Exécuter les sections désirées:
+% 1 - Exécuter le fichier parametres.m pour aller load les params du moteur
+% 2 - Exécuter les sections désorées:
 %       - Réponse en BO: Comparaison de la modélisation mathématique et la
 %                           réponse exp
 %       - Contrôleur du moteur: Calcul les gains au pôle p spécifié
@@ -44,10 +44,6 @@ xlabel("Temps (sec)")
 ylabel("Vitesse [deg/sec]")
 grid on
 hold off
-
-clear StepAmplitude Time MotorAngle Phi CurrentSpeed Angle BikeAngle
-clear Command Phi_dot targetAccek targetSpeed TargetSpeed tout targetAccel
-clear stepVal
 
 %% ----- Contrôleur du moteur -----
 %% Contrôleur du moteur
@@ -95,10 +91,10 @@ clear Kps Kis
 clear H2
 
 
-%% Réponse à une Rampe, TODO corrigé
+%% Réponse à une Rampe
 clc
 close all
-plotExp = 0;
+plotExp = ;
 
 if plotExp == true
     load(fullfile("PythonData", 'Moteur_BF_C3_15000'))
@@ -139,5 +135,3 @@ hold off
 % ylabel("Tension [V]")
 % grid on
 % hold off
-
-clear plotExp
