@@ -1,8 +1,13 @@
 #include "Motor_Controller.h"
 
-double Kp = 0.5;
-double Ki = 0;
-double Kd = 0;
+bool toPrint = true; 
+
+double Kp_m = 0.011740;
+double Ki_m = 0.500114;
+double Kd_m = 0;
+
+const float cutoff_freq_motor_speed   = 15;  //Cutoff frequency in Hz
+IIR::ORDER  order_motor_speed  = IIR::ORDER::OD1; // Order (OD1 to OD4)
 
 static void measureSpeedTimer(){
     flywheelMotor.measureSpeed();
@@ -18,31 +23,39 @@ FlywheelMotor flywheelMotor;
 FlywheelMotor::FlywheelMotor(): _motor_enc(ENC_PIN_1, ENC_PIN_2), 
                                 _speedMeasureTimer(),
                                 _speedComputeTimer(),
-                                _speedPID(&_speed, &_speedCommand, &_targetSpeed, Kp, Ki, Kd, DIRECT){
+                                _speedFilter(cutoff_freq_motor_speed, SPEED_INTERVAL/1000000, order_motor_speed){
     _prevAngle = 0;
     _currentAngle = 0;
+    _targetSpeed = 5000;
 
-    _Kp = Kp;
-    _Kd = Kd;
-    _Ki = Ki;
-
-    _speedPID.SetMode(AUTOMATIC);
-    _speedPID.SetOutputLimits(0, 256);
-    _speedPID.SetTunings(_Kp, _Ki, _Kd);
-    _speedPID.SetSampleTime(COMPUTE_INTERVAL/1000);
+    _Kp = Kp_m;
+    _Kd = Kd_m;
+    _Ki = Ki_m;
+    _KiSamp = _Ki*COMPUTE_INTERVAL/1000000;     //Ki * computeTime in sec
 
     _speedMeasureTimer.priority(255);
     _speedComputeTimer.priority(254);
-
 
     pinMode(_pin1, OUTPUT);
     pinMode(_pin2, OUTPUT);
 }
 
 void FlywheelMotor::startMotor(){
-    _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
-    _speedComputeTimer.begin(computeSpeedTimer, COMPUTE_INTERVAL);
+    _speedFilter.flush();
+
+    // Reset motor parameters
+    _speed = 0;
+    _speedRaw = 0;
+
     _motor_enc.write(0);
+    _prevAngle = 0;
+    _currentAngleRaw = 0;
+
+    _outputSum = 0;
+
+    flywheelMotor.computeCommand();
+    _speedComputeTimer.begin(computeSpeedTimer, COMPUTE_INTERVAL);
+    _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
 }
 
 void FlywheelMotor::stopMotor(){
@@ -50,28 +63,29 @@ void FlywheelMotor::stopMotor(){
     _speedComputeTimer.end();
 
     setMotorSpeed(0, CW);
-    delay(10);
+    delay(50);
 
-    Serial.print("#");
-    Serial.print(_speedPID.GetKp());
+    Serial.print("!");
+    Serial.print(_Kp, 5);
     Serial.print(", ");
-    Serial.print(_speedPID.GetKi());
+    Serial.print(_Ki, 5);
     Serial.print(", ");
-    Serial.println(_speedPID.GetKd());
+    Serial.println(_Kd, 5);
 }
 
-//Return encoder value
+//Return encoder value, not used
 double FlywheelMotor::readAngle(){
     return _motor_enc.read()*COUNT_TO_ANGLE;
 }
 
 //Calculate motor speed
 void FlywheelMotor::measureSpeed(){    
-    _prevAngle = _currentAngle;
-    _currentAngle = readAngle();
+    _prevAngle = _currentAngleRaw;
+    _currentAngleRaw = readAngle();
+    _currentAngle = _currentAngleRaw;
 
-
-    _speed = ((_currentAngle - _prevAngle) * USEC_TO_SEC) / SPEED_INTERVAL;
+    _speedRaw = (_currentAngleRaw - _prevAngle) * SEC_SPEED;    // Derivative of angle
+    _speed = _speedFilter.filterIn(_speedRaw);
 
     if(DEBUG_MOTOR){
         Serial.print("Delta angle: ");
@@ -85,7 +99,7 @@ void FlywheelMotor::measureSpeed(){
 
 //Set speed of the motor, dir:CW or CCW
 void FlywheelMotor::setMotorSpeed(int speed, bool dir){
-    if(dir == CW){
+    if(dir == CCW){
         analogWrite(_pin1, 0);
         analogWrite(_pin2, speed);
     }
@@ -95,28 +109,46 @@ void FlywheelMotor::setMotorSpeed(int speed, bool dir){
     }
 }
 
-//Set speed of the flywheel with PID, if targetSpeed < 0 => CCW
-void FlywheelMotor::computeCommand(){
-
-    if(_speedPID.Compute()){
-        printMotorData();
-
-        bool dir = _speedCommand < 0 ? CCW : CW;
-        if(dir == CW){
-            analogWrite(_pin1, 0);
-            analogWrite(_pin2, abs(_speedCommand));
-        }
-        else{
-            analogWrite(_pin1, abs(_speedCommand));
-            analogWrite(_pin2, 0);
-        }
+//Set speed of the motor, speed > 0 => CW
+void FlywheelMotor::setMotorSpeed(int speed){
+    bool dir = speed < 0 ? CCW : CW;
+    if(dir == CCW){
+        analogWrite(_pin1, 0);
+        analogWrite(_pin2, abs(speed));
+    }
+    else{
+        analogWrite(_pin1, abs(speed));
+        analogWrite(_pin2, 0);
     }
 }
 
+//Set speed of the flywheel with PID
+void FlywheelMotor::computeCommand(){
+    double error = _targetSpeed - _speed;
+    double output;
+
+    _outputSum += (_KiSamp * error);
+    output = _outputSum - _Kp * _speed;
+
+    //Saturate output voltage to +/- 6V
+    if(output > 6) output = 6;
+    else if(output < -6) output = -6;  
+
+    _speedCommand = output;
+
+    double pwmVal = _speedCommand*V_TO_PWM;
+    setMotorSpeed(pwmVal);
+}
+
+// To measure step reponse
 void FlywheelMotor::stepReponse(double stepAmplitude){
     double stepTime = 3000; //Time in ms
+
+    _speed = 0;
     _speedMeasureTimer.begin(measureSpeedTimer, SPEED_INTERVAL);
     _motor_enc.write(0);
+    _currentAngle = 0;
+    _prevAngle = 0;
 
     unsigned int startingTime = millis();
     unsigned int lastPrint = millis();
@@ -124,13 +156,13 @@ void FlywheelMotor::stepReponse(double stepAmplitude){
 
     while(currentTime - startingTime < stepTime){
         currentTime = millis();
-        setMotorSpeed(stepAmplitude*255/6, CW);
+        setMotorSpeed(stepAmplitude*255/6, CCW);
         if(currentTime - lastPrint > COMPUTE_INTERVAL/1000){
             printMotorData();
             lastPrint = currentTime;
         }
     }
-    delay(50);
+    Serial.println("*");
     stopMotor();
 }
 
@@ -141,50 +173,90 @@ void FlywheelMotor::brakeMotor(){
 }
 
 //! Interface
+// Send bike data to Python Interface
 void FlywheelMotor::printMotorData(){
-    Serial.print("#");
-    Serial.print(_targetSpeed);
-    Serial.print(", ");
-    Serial.print(_speed);
-    Serial.print(", ");
-    Serial.print(_speedCommand);
-    Serial.print(", ");
-    Serial.println(_currentAngle);
+    // Data format:
+    // ##Bike_Target_Angle, Bike_Angle, Bike_Angle_Raw, Bike_AngVel, Bike_AngVel_Raw, FW_Angle, FW_Angle_Raw
+    //   FW_Speed, FW_Speed_Raw, FW_Target_Speed, FW_Target_Accel, FW_Command, Time
+    if(!_printTextData){
+        Serial.print("#");
+        Serial.print(mainController.getAngle(), 5);
+        Serial.print(", ");
+        Serial.print(mainController.getAngleRaw(), 5);
+        Serial.print(", ");
+        Serial.print(mainController.getTargetAngle(), 5);
+        Serial.print(", ");
+        Serial.print(mainController.getAngularVel());
+        Serial.print(", ");
+        Serial.print(mainController.getAngularVelRaw());
+        Serial.print(", ");
+        Serial.print(_currentAngle);
+        Serial.print(", ");
+        Serial.print(_currentAngleRaw);
+        Serial.print(", ");
+        Serial.print(_speed);
+        Serial.print(", ");
+        Serial.print(_speedRaw);
+        Serial.print(", ");
+        Serial.print(_targetSpeed);
+        Serial.print(", ");
+        Serial.print(mainController.getTargetAccel());
+        Serial.print(", ");
+        Serial.print(_speedCommand);
+        Serial.print(", ");
+        Serial.println(millis());
+    }
+    else{
+        Serial.print("Time:");
+        Serial.print(millis());
+
+        Serial.print("\tBike Angle:");  //deg
+        Serial.print(mainController.getAngle(), 5);
+
+        Serial.print("\t\tGoal: ");       //deg/sec
+        Serial.print(_targetSpeed);
+
+        Serial.print("\tSpeed: ");      //deg/sec      
+        Serial.print(_speed);
+
+        Serial.print("\tPWM: ");
+        Serial.print(_speedCommand);
+
+        Serial.print("\tAngle: ");      //deg
+        Serial.println(_currentAngle);
+    }
+    
 }
 
 //Return current motor angle
 double FlywheelMotor::getAngle(){return _currentAngle;}
 
+double FlywheelMotor::getAngleRaw(){return _currentAngleRaw;}
+
 //Return current motor speed in deg/sec
-double FlywheelMotor::getSpeed(){ return _speed; }
+double FlywheelMotor::getSpeed(){ return _speed;}
+
+double FlywheelMotor::getSpeedRaw(){ return _speedRaw;}
 
 //Return current motor speed in rpm
-double FlywheelMotor::getSpeedRPM(){ return _speed/6; }
+double FlywheelMotor::getSpeedRPM(){ return _speed/6;}
+
+double FlywheelMotor::getTargetSpeed(){ return _targetSpeed;}
+
+double FlywheelMotor::getKp(){return _Kp;}
+
+double FlywheelMotor::getKi(){return _Ki;}
+
+double FlywheelMotor::getKd(){return _Kd;}
+
 
 void FlywheelMotor::setTargetSpeed(double targetSpeed){ _targetSpeed = targetSpeed;}
 
-void FlywheelMotor::setPID(){ 
-    _speedPID.SetTunings(_Kp, _Ki, _Kd);
-}
-
-void FlywheelMotor::setPID(double Kp, double Ki, double Kd){ 
-    _Kp = Kp;
-    _Ki = Ki;
-    _Kd = Kd;
-    _speedPID.SetTunings(_Kp, _Ki, _Kd);
-}
-
-void FlywheelMotor::setKp(double Kp){
-    _Kp = Kp;
-    setPID();
-}
+void FlywheelMotor::setKp(double Kp){_Kp = Kp;}
 
 void FlywheelMotor::setKi(double Ki){
     _Ki = Ki;
-    setPID();
+    _KiSamp = _Ki*COMPUTE_INTERVAL/1000000;
 }
 
-void FlywheelMotor::setKd(double Kd){
-    _Kd = Kd;
-    setPID();
-}
+void FlywheelMotor::setKd(double Kd){ _Kd = Kd;}
