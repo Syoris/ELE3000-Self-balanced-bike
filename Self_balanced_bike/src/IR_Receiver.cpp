@@ -5,7 +5,7 @@ decode_results results;
 
 void IR_Setup(){
   irrecv.enableIRIn(); // Start the receiver
-  irrecv.blink13(true);
+//   irrecv.blink13(true);
 }
 
 // Get the value sent
