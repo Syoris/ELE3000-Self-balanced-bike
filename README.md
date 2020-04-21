@@ -1,4 +1,4 @@
-# ELE3000-Self-balanced-bike
+# ELE3000 -  Conception d'un vélo autoéquilibré
 Code pour le vélo autoéquilibré réalisé dans le cadre du cours ELE3000
 
 ## Code embarqué - Dossier Self_Balanced_Bike
