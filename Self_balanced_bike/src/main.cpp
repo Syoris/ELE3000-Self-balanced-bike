@@ -10,7 +10,7 @@
 // Define
 #define LED_PIN 13
 #define SERVO_PIN 10
-#define IR_INTERVAL 100 //In ms
+#define COM_INTERVAL 100 //In ms
 #define SERVO_MAX_SPEED 3
 
 // Associations bouttons
@@ -85,7 +85,7 @@ void loop() {
     currentTime = millis();
 
     //! Read Serial Input
-    if(currentTime - prevTimeCommand > IR_INTERVAL){
+    if(currentTime - prevTimeCommand > COM_INTERVAL){
         prevTimeCommand = currentTime;
         readRemote();
 	    readSerial();
@@ -235,15 +235,6 @@ void goToAccel(){
         flywheelMotor.setTargetSpeed(newSpeed);
         flywheelMotor.printMotorData();
         prevTime = currentTime;
-        
-        // Serial.print("Goal accel: ");
-        // Serial.print(goalAccel);
-        // Serial.print("\t Compute int: ");
-        // Serial.print(computInt);
-        // Serial.print("\t Speed inc:");
-        // Serial.print(speedInc);
-        // Serial.print("\t New speed:");
-        // Serial.println(newSpeed);
     }
 }
 
